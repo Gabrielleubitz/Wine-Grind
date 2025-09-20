@@ -230,8 +230,8 @@ const PendingRegistrations: React.FC = () => {
         return;
       }
       
-      // Send email via Netlify Function
-      const response = await fetch('/.netlify/functions/send-acceptance-email', {
+      // Send email via Vercel Function
+      const response = await fetch('/api/send-acceptance-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

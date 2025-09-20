@@ -148,7 +148,7 @@ export const useRegistration = () => {
       // Send email notifications
       try {
         // Send confirmation email to user
-        await fetch('/.netlify/functions/send-registration-email', {
+        await fetch('/api/send-registration-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -158,7 +158,7 @@ export const useRegistration = () => {
         });
 
         // Send admin notification
-        await fetch('/.netlify/functions/send-admin-notification', {
+        await fetch('/api/send-admin-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
