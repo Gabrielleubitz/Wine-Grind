@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Sheets Integration - Wine & Grind</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #C8102E 0%, #0070FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .secondary-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        .secondary-btn:hover {
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .success {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            color: #047857;
+        }
+        .error {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #dc2626;
+        }
+        .loading {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 8px 0 16px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-loading { 
+            background: #f59e0b; 
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Wine & Grind Google Sheets Test</h1>
+        <p class="subtitle">Test your Google Sheets integration before going live with the chat widget.</p>
+        
+        <div class="form-grid">
+            <div>
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" value="John Smith" placeholder="Enter full name">
+                
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" value="john.smith@example.com" placeholder="Enter email">
+            </div>
+            <div>
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" value="+1-555-123-4567" placeholder="Enter phone number">
+                
+                <label for="note">Additional Notes</label>
+                <textarea id="note" rows="3" placeholder="Any additional information...">Test registration from Google Sheets tester - interested in AI topics and networking opportunities.</textarea>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button onclick="testGoogleSheets()" id="singleTestBtn">
+                <span class="status-indicator status-loading" id="singleStatus" style="display: none;"></span>
+                Send Single Test
+            </button>
+            <button onclick="sendMultipleTests()" id="batchTestBtn" class="secondary-btn">
+                <span class="status-indicator status-loading" id="batchStatus" style="display: none;"></span>
+                Send Batch Test (3 records)
+            </button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Updated Google Sheets URL
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbyvEOT0vVyLzQUehq1_cFKX85mvXa4k70DzZKgMK56davwaBg2bevnsfd3J1C7ZPb-ALg/exec";
+
+        function showLoading(buttonId, statusId) {
+            const button = document.getElementById(buttonId);
+            const status = document.getElementById(statusId);
+            button.disabled = true;
+            status.style.display = 'inline-block';
+        }
+
+        function hideLoading(buttonId, statusId) {
+            const button = document.getElementById(buttonId);
+            const status = document.getElementById(statusId);
+            button.disabled = false;
+            status.style.display = 'none';
+        }
+
+        async function testGoogleSheets() {
+            const resultDiv = document.getElementById('result');
+            showLoading('singleTestBtn', 'singleStatus');
+            
+            resultDiv.innerHTML = '<div class="result loading"><span class="status-indicator status-loading"></span>Sending data to Google Sheets...</div>';
+
+            const data = {
+                full_name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                note: `Wine & Grind Test Registration - ${new Date().toISOString()}
+                
+${document.getElementById('note').value}
+
+Source: Google Sheets Tester
+Event: Wine & Grind 4.0 - June 28th, 2025
+Location: Deli Vino, Netanya
+Registration Status: Test
+Priority: Medium - Test data
+Agent: Manual Test
+
+This is a test registration to verify Google Sheets integration is working correctly.`
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                hideLoading('singleTestBtn', 'singleStatus');
+
+                if (response.ok) {
+                    const responseText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <span class="status-indicator status-success"></span>
+                            <strong>✅ Success!</strong><br><br>
+                            <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                            <strong>Response:</strong> ${responseText}<br>
+                            <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br><br>
+                            <strong>Data sent to Google Sheets:</strong><br>
+                            <pre style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 10px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <span class="status-indicator status-error"></span>
+                            <strong>❌ HTTP Error!</strong><br><br>
+                            <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                            <strong>Response:</strong> ${errorText || 'No response body'}<br>
+                            <strong>Timestamp:</strong> ${new Date().toLocaleString()}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                hideLoading('singleTestBtn', 'singleStatus');
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <span class="status-indicator status-error"></span>
+                        <strong>❌ Network Error!</strong><br><br>
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br><br>
+                        <em>This could be due to network issues, incorrect Google Sheets URL, or the Web App not being properly deployed.</em>
+                    </div>
+                `;
+            }
+        }
+
+        async function sendMultipleTests() {
+            const resultDiv = document.getElementById('result');
+            showLoading('batchTestBtn', 'batchStatus');
+            
+            resultDiv.innerHTML = '<div class="result loading"><span class="status-indicator status-loading"></span>Sending batch test records to Google Sheets...</div>';
+
+            const testData = [
+                {
+                    full_name: "Alice Johnson",
+                    email: "alice.johnson@example.com",
+                    phone: "+1-555-111-2222",
+                    note: "Test record #1 - AI startup founder interested in networking"
+                },
+                {
+                    full_name: "Bob Wilson",
+                    email: "bob.wilson@example.com", 
+                    phone: "+1-555-333-4444",
+                    note: "Test record #2 - VC investor looking for deal flow"
+                },
+                {
+                    full_name: "Carol Davis",
+                    email: "carol.davis@example.com",
+                    phone: "+1-555-555-6666", 
+                    note: "Test record #3 - Tech executive interested in industry trends"
+                }
+            ];
+
+            let results = [];
+            let successCount = 0;
+
+            for (let i = 0; i < testData.length; i++) {
+                const data = {
+                    ...testData[i],
+                    note: `Wine & Grind Batch Test Registration #${i + 1} - ${new Date().toISOString()}
+                    
+${testData[i].note}
+
+Source: Google Sheets Tester (Batch Test)
+Event: Wine & Grind 4.0 - June 28th, 2025
+Location: Deli Vino, Netanya
+Registration Status: Test Batch
+Priority: Low - Test data
+Agent: Batch Test
+
+This is test record ${i + 1} of 3 to verify Google Sheets can handle multiple registrations.`
+                };
+
+                try {
+                    const response = await fetch(GOOGLE_SHEETS_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const success = response.ok;
+                    if (success) successCount++;
+
+                    results.push({
+                        success: success,
+                        status: response.status,
+                        name: data.full_name,
+                        error: success ? null : await response.text()
+                    });
+
+                    // Update progress
+                    resultDiv.innerHTML = `
+                        <div class="result loading">
+                            <span class="status-indicator status-loading"></span>
+                            Processing batch test... ${i + 1}/3 completed
+                        </div>
+                    `;
+
+                    // Small delay between requests
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    results.push({
+                        success: false,
+                        error: error.message,
+                        name: data.full_name
+                    });
+                }
+            }
+
+            hideLoading('batchTestBtn', 'batchStatus');
+
+            const resultClass = successCount === 3 ? 'success' : (successCount > 0 ? 'loading' : 'error');
+            const statusIcon = successCount === 3 ? 'success' : (successCount > 0 ? 'loading' : 'error');
+            
+            const resultHtml = `
+                <div class="result ${resultClass}">
+                    <span class="status-indicator status-${statusIcon}"></span>
+                    <strong>${successCount === 3 ? '✅' : successCount > 0 ? '⚠️' : '❌'} Batch Test Complete!</strong><br><br>
+                    <strong>Summary:</strong> ${successCount}/3 records sent successfully<br>
+                    <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br><br>
+                    <strong>Individual Results:</strong><br>
+                    ${results.map((r, i) => 
+                        `<div style="margin: 8px 0; padding: 8px; background: ${r.success ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px;">
+                            Record ${i + 1} (${r.name}): ${r.success ? '✅ Success' : '❌ Failed'}
+                            ${r.error ? `<br><small style="color: #6b7280;">Error: ${r.error}</small>` : ''}
+                        </div>`
+                    ).join('')}
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHtml;
+        }
+
+        // Auto-focus first input
+        document.getElementById('fullName').focus();
+    </script>
+</body>
+</html>

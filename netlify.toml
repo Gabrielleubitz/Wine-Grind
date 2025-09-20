@@ -1,0 +1,29 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  deno_import_map = ""
+  external_node_modules = ["twilio", "node-mailjet", "firebase-admin", "openai"]
+
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 5173
+  framework = "#custom"
+  functionsPort = 9999

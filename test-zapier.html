@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Zapier Webhook</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .success {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            color: #15803d;
+        }
+        .error {
+            background: #fef2f2;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Zapier Webhook</h1>
+        <p>Use this page to test your Zapier webhook integration before testing through the chat widget.</p>
+        
+        <div>
+            <label for="fullName">Full Name:</label>
+            <input type="text" id="fullName" value="John Smith" placeholder="Enter full name">
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="john.smith@example.com" placeholder="Enter email">
+            
+            <label for="phone">Phone:</label>
+            <input type="tel" id="phone" value="+1-555-123-4567" placeholder="Enter phone number">
+            
+            <label for="note">Additional Notes:</label>
+            <input type="text" id="note" value="Test registration from webhook tester" placeholder="Enter notes">
+        </div>
+        
+        <button onclick="testWebhook()">Send Test Data to Zapier</button>
+        <button onclick="sendMultipleTests()">Send 3 Test Records</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/9717017/uy14yfb/";
+
+        async function testWebhook() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Sending data to Zapier...</p>';
+
+            const data = {
+                full_name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                note: `Wine & Grind Test Registration - ${new Date().toISOString()}
+                
+${document.getElementById('note').value}
+Source: Webhook Tester
+Event: Wine & Grind 4.0 - June 28th, 2025
+Location: Deli Vino, Netanya
+Registration Status: Test
+Priority: Medium - Test data
+
+This is a test registration to verify Zapier webhook integration is working correctly.`
+            };
+
+            try {
+                const response = await fetch(ZAPIER_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>✅ Success!</strong><br>
+                            Status: ${response.status}<br>
+                            Data sent: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <strong>❌ Error!</strong><br>
+                            Status: ${response.status}<br>
+                            Response: ${await response.text()}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Network Error!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function sendMultipleTests() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Sending multiple test records...</p>';
+
+            const testData = [
+                {
+                    full_name: "Alice Johnson",
+                    email: "alice.johnson@example.com",
+                    phone: "+1-555-111-2222",
+                    note: "Test record #1 - Interested in AI topics"
+                },
+                {
+                    full_name: "Bob Wilson",
+                    email: "bob.wilson@example.com", 
+                    phone: "+1-555-333-4444",
+                    note: "Test record #2 - Startup founder"
+                },
+                {
+                    full_name: "Carol Davis",
+                    email: "carol.davis@example.com",
+                    phone: "+1-555-555-6666", 
+                    note: "Test record #3 - Investor"
+                }
+            ];
+
+            let results = [];
+
+            for (let i = 0; i < testData.length; i++) {
+                const data = {
+                    ...testData[i],
+                    note: `Wine & Grind Test Registration #${i + 1} - ${new Date().toISOString()}
+                    
+${testData[i].note}
+Source: Webhook Tester (Batch Test)
+Event: Wine & Grind 4.0 - June 28th, 2025
+Location: Deli Vino, Netanya
+Registration Status: Test Batch
+Priority: Low - Test data
+
+This is test record ${i + 1} of 3 to verify Zapier webhook can handle multiple registrations.`
+                };
+
+                try {
+                    const response = await fetch(ZAPIER_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    results.push({
+                        success: response.ok,
+                        status: response.status,
+                        data: data.full_name
+                    });
+
+                    // Small delay between requests
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    results.push({
+                        success: false,
+                        error: error.message,
+                        data: data.full_name
+                    });
+                }
+            }
+
+            const successCount = results.filter(r => r.success).length;
+            const resultHtml = `
+                <div class="result ${successCount === 3 ? 'success' : 'error'}">
+                    <strong>${successCount === 3 ? '✅' : '⚠️'} Batch Test Complete!</strong><br>
+                    Successfully sent: ${successCount}/3 records<br><br>
+                    ${results.map((r, i) => 
+                        `Record ${i + 1} (${r.data}): ${r.success ? '✅ Success' : '❌ Failed'}`
+                    ).join('<br>')}
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHtml;
+        }
+    </script>
+</body>
+</html>

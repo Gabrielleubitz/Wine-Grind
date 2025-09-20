@@ -1,0 +1,601 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  User, 
+  Settings, 
+  LogOut, 
+  Calendar, 
+  Mic, 
+  Shield, 
+  ChevronDown,
+  Menu,
+  X
+} from 'lucide-react';
+import { useAuth } from '../hooks/useAuth'; // Your actual auth hook
+import { SpeakerService } from '../services/speakerService'; // Your speaker service
+import logoSvg from '../assets/W&G Logo.svg';
+import ProfilePictureUploader from './profile/ProfilePictureUploader';
+
+const SpeakerAwareHeader: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout, isAdmin, isPending } = useAuth(); // Added isPending check
+  
+  const [isSpeaker, setIsSpeaker] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [checkingSpeakerStatus, setCheckingSpeakerStatus] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+
+  // Check if user is a speaker when component mounts or user changes
+  useEffect(() => {
+    const checkSpeakerStatus = async () => {
+      if (!user?.uid) {
+        setIsSpeaker(false);
+        return;
+      }
+
+      try {
+        setCheckingSpeakerStatus(true);
+        console.log('🎤 Checking speaker status for user:', user.uid);
+        
+        // Use your actual SpeakerService to check if user is a speaker
+        const isUserSpeaker = await SpeakerService.isUserSpeaker(user.uid);
+        console.log('🎤 Speaker status result:', isUserSpeaker);
+        
+        setIsSpeaker(isUserSpeaker);
+      } catch (error) {
+        console.error('❌ Error checking speaker status:', error);
+        setIsSpeaker(false);
+      } finally {
+        setCheckingSpeakerStatus(false);
+      }
+    };
+
+    checkSpeakerStatus();
+  }, [user?.uid]);
+
+  // Update profile image when user changes
+  useEffect(() => {
+    if (user?.profileImage) {
+      setProfileImageUrl(user.profileImage);
+    }
+  }, [user?.profileImage]);
+
+  // Close dropdowns when clicking outside or navigating
+  useEffect(() => {
+    setShowProfileMenu(false);
+    setShowMobileMenu(false);
+  }, [location.pathname]);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setShowProfileMenu(false);
+    setShowMobileMenu(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
+  };
+
+  // Function to handle Events button click
+  const handleEventsClick = () => {
+    if (location.pathname === '/') {
+      // If on homepage, scroll to events section
+      const eventsSection = document.getElementById('events');
+      if (eventsSection) {
+        eventsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (location.pathname.includes('/events')) {
+      // If on events page or dashboard, scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // If on another page, navigate to events page
+      navigate('/events');
+    }
+  };
+
+  // Handle profile picture upload success
+  const handleProfilePictureSuccess = (imageUrl: string) => {
+    setProfileImageUrl(imageUrl);
+    setImageUploadError(null);
+    setShowProfileMenu(false); // Close menu after successful upload
+  };
+
+  // Handle profile picture upload error
+  const handleProfilePictureError = (errorMessage: string) => {
+    setImageUploadError(errorMessage);
+  };
+
+  // If user is pending, don't render navigation options that would lead to protected routes
+  if (user && isPending) {
+    return (
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => navigate('/')}
+                className="flex items-center"
+              >
+                <img 
+                  src={logoSvg}
+                  alt="Wine & Grind Logo" 
+                  className="h-10 w-auto"
+                />
+              </button>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // Don't render anything if no user (not authenticated)
+  if (!user) {
+    return (
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => navigate('/')}
+                className="flex items-center"
+              >
+                <img 
+                  src={logoSvg}
+                  alt="Wine & Grind Logo" 
+                  className="h-10 w-auto"
+                />
+              </button>
+            </div>
+            <nav className="hidden md:flex space-x-8">
+              <button 
+                onClick={handleEventsClick}
+                className="text-gray-600 hover:text-red-600 font-medium transition-colors"
+              >
+                Events
+              </button>
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-gray-600 hover:text-red-600 font-medium transition-colors"
+              >
+                Login
+              </button>
+            </nav>
+            
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+          
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden py-4 border-t border-gray-200">
+              <button 
+                onClick={handleEventsClick}
+                className="block w-full text-left px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                Events
+              </button>
+              <button 
+                onClick={() => navigate('/login')}
+                className="block w-full text-left px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                Login
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+    );
+  }
+
+  return (
+    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => handleNavigation('/')}
+              className="flex items-center"
+            >
+              <img 
+                src={logoSvg}
+                alt="Wine & Grind Logo" 
+                className="h-10 w-auto"
+              />
+            </button>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {/* Regular Navigation Items */}
+            <button 
+              onClick={handleEventsClick}
+              className={`font-medium transition-colors ${
+                location.pathname === '/events' 
+                  ? 'text-red-600' 
+                  : 'text-gray-600 hover:text-red-600'
+              }`}
+            >
+              Events
+            </button>
+            
+            <button 
+              onClick={() => handleNavigation('/dashboard')}
+              className={`font-medium transition-colors ${
+                location.pathname === '/dashboard' 
+                  ? 'text-red-600' 
+                  : 'text-gray-600 hover:text-red-600'
+              }`}
+            >
+              Dashboard
+            </button>
+
+            {/* Speaker Navigation - Only show if user is a speaker */}
+            {isSpeaker && (
+              <button 
+                onClick={() => handleNavigation('/speaker-dashboard')}
+                className={`flex items-center space-x-2 font-medium transition-colors px-3 py-2 rounded-full ${
+                  location.pathname === '/speaker-dashboard'
+                    ? 'text-orange-700 bg-orange-100'
+                    : 'text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100'
+                }`}
+                title="Speaker Dashboard"
+              >
+                <Mic className="h-4 w-4" />
+                <span>Speaker</span>
+                {checkingSpeakerStatus && (
+                  <div className="w-3 h-3 border border-orange-600 border-t-transparent rounded-full animate-spin ml-1" />
+                )}
+              </button>
+            )}
+
+            {/* Admin Navigation - Only show if user is admin */}
+            {isAdmin && (
+              <button 
+                onClick={() => handleNavigation('/admin-tools')}
+                className={`flex items-center space-x-2 font-medium transition-colors px-3 py-2 rounded-full ${
+                  location.pathname.startsWith('/admin')
+                    ? 'text-purple-700 bg-purple-100'
+                    : 'text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100'
+                }`}
+                title="Admin Panel"
+              >
+                <Shield className="h-4 w-4" />
+                <span>Admin</span>
+              </button>
+            )}
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-red-500 to-blue-500 text-white font-bold text-sm">
+                  {user.profileImage ? (
+                    <img 
+                      src={user.profileImage} 
+                      alt={user.displayName || 'User'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzlDQTNBRiIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTQwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+                      }}
+                    />
+                  ) : (
+                    user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'
+                  )}
+                </div>
+                <span className="font-medium">
+                  {user?.displayName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}
+                </span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                          {user.profileImage ? (
+                            <img 
+                              src={user.profileImage} 
+                              alt={user.displayName || 'User'} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzlDQTNBRiIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTQwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-red-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                              {user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Quick upload overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full"></div>
+                          <ProfilePictureUploader
+                            currentImageUrl={user.profileImage || null}
+                            onUploadSuccess={handleProfilePictureSuccess}
+                            onUploadError={handleProfilePictureError}
+                            size="sm"
+                            showButtons={false}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {user?.displayName || user?.name || 'User'}
+                        </div>
+                        <div className="text-sm text-gray-600">{user?.email}</div>
+                        {/* Role Badges */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {isAdmin && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Admin
+                            </span>
+                          )}
+                          {isSpeaker && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              <Mic className="h-3 w-3 mr-1" />
+                              Speaker
+                            </span>
+                          )}
+                          {!isAdmin && !isSpeaker && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <User className="h-3 w-3 mr-1" />
+                              Member
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Profile picture upload error */}
+                    {imageUploadError && (
+                      <div className="mt-2 text-xs text-red-600">
+                        {imageUploadError}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        navigate('/events');
+                        // Find the edit profile button and click it
+                        setTimeout(() => {
+                          const editProfileButton = document.querySelector('button[aria-label="Edit Profile"]') || 
+                                                   document.querySelector('button:has(.edit-profile-icon)');
+                          if (editProfileButton) {
+                            (editProfileButton as HTMLButtonElement).click();
+                          }
+                        }, 500);
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleNavigation('/events')}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      <span>My Events</span>
+                    </button>
+
+                    {/* Speaker-specific menu item */}
+                    {isSpeaker && (
+                      <button
+                        onClick={() => handleNavigation('/speaker-dashboard')}
+                        className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors"
+                      >
+                        <Mic className="h-4 w-4" />
+                        <span>Speaker Dashboard</span>
+                      </button>
+                    )}
+
+                    {/* Admin-specific menu item */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleNavigation('/admin-tools')}
+                        className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
+                      >
+                        <Shield className="h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => handleNavigation('/events')}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-100 py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {showMobileMenu && (
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <div className="space-y-2">
+              <button 
+                onClick={handleEventsClick}
+                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  location.pathname === '/events'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+                }`}
+              >
+                Events
+              </button>
+              
+              <button 
+                onClick={() => handleNavigation('/events')}
+                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  location.pathname === '/dashboard'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+                }`}
+              >
+                Dashboard
+              </button>
+
+              {/* Speaker Mobile Menu Item */}
+              {isSpeaker && (
+                <button 
+                  onClick={() => handleNavigation('/speaker-dashboard')}
+                  className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/speaker-dashboard'
+                      ? 'text-orange-700 bg-orange-50'
+                      : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                  }`}
+                >
+                  <Mic className="h-4 w-4" />
+                  <span>Speaker Dashboard</span>
+                  {checkingSpeakerStatus && (
+                    <div className="w-3 h-3 border border-orange-600 border-t-transparent rounded-full animate-spin ml-1" />
+                  )}
+                </button>
+              )}
+
+              {/* Admin Mobile Menu Item */}
+              {isAdmin && (
+                <button 
+                  onClick={() => handleNavigation('/admin-tools')}
+                  className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname.startsWith('/admin')
+                      ? 'text-purple-700 bg-purple-50'
+                      : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                  }`}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
+
+              {/* Mobile User Info */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="flex items-center space-x-3 px-4 py-2">
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    {user.profileImage ? (
+                      <img 
+                        src={user.profileImage} 
+                        alt={user.displayName || 'User'} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzlDQTNBRiIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTQwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-red-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">
+                      {user?.displayName || user?.name || 'User'}
+                    </div>
+                    <div className="text-sm text-gray-600">{user?.email}</div>
+                  </div>
+                </div>
+                
+                {/* Mobile Role Badges */}
+                <div className="flex flex-wrap gap-2 px-4 py-2">
+                  {isAdmin && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Admin
+                    </span>
+                  )}
+                  {isSpeaker && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <Mic className="h-3 w-3 mr-1" />
+                      Speaker
+                    </span>
+                  )}
+                  {!isAdmin && !isSpeaker && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <User className="h-3 w-3 mr-1" />
+                      Member
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default SpeakerAwareHeader;
