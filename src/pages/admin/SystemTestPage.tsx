@@ -85,7 +85,7 @@ const SystemTestPage: React.FC = () => {
     const startTime = performance.now();
     
     try {
-      // Call the Vercel API function to send a test email
+      // Call the Vercel API function to send a test email (Updated)
       const response = await fetch('/api/test-email', {
         method: 'POST',
         headers: {
