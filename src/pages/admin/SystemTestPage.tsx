@@ -101,7 +101,27 @@ const SystemTestPage: React.FC = () => {
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
       
-      const responseData = await response.json();
+      // Get response text first to debug parsing issues
+      const responseText = await response.text();
+      console.log('Raw API Response:', responseText);
+      
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        updateTestResult(testId, {
+          status: 'error',
+          message: `JSON parsing failed: ${parseError.message}`,
+          duration,
+          details: {
+            rawResponse: responseText.substring(0, 200) + '...',
+            parseError: parseError.message,
+            status: response.status,
+            statusText: response.statusText
+          }
+        });
+        return;
+      }
       
       if (response.ok) {
         updateTestResult(testId, {
