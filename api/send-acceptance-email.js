@@ -1,6 +1,6 @@
 const Mailjet = require('node-mailjet');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).json({ success: true });
