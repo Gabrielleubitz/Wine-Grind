@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Ensure root-relative asset URLs to avoid cross-origin redirects in production
+  base: '/',
   plugins: [react()],
   optimizeDeps: {
     include: [
