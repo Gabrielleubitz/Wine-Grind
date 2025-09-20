@@ -85,8 +85,8 @@ const SystemTestPage: React.FC = () => {
     const startTime = performance.now();
     
     try {
-      // Call the Netlify function to send a test email
-      const response = await fetch('/.netlify/functions/test-email', {
+      // Call the Vercel API function to send a test email
+      const response = await fetch('/api/test-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,6 +150,7 @@ const SystemTestPage: React.FC = () => {
     const startTime = performance.now();
     
     try {
+      // Note: SMS API not yet converted to Vercel functions
       // Call the Netlify function to send a test SMS
       const response = await fetch('/.netlify/functions/send-sms', {
         method: 'POST',
@@ -214,6 +215,7 @@ const SystemTestPage: React.FC = () => {
     const startTime = performance.now();
     
     try {
+      // Note: GPT API not yet converted to Vercel functions  
       // Call the Netlify function to test GPT
       const response = await fetch('/.netlify/functions/test-gpt', {
         method: 'POST',
