@@ -125,10 +125,13 @@ const PendingRegistrations: React.FC = () => {
       // Send SMS notification
       await sendApprovalSMS(userId);
       
+      // Send email notification
+      await sendApprovalEmail(userId);
+      
       // Update local state
       setPendingUsers(prev => prev.filter(u => u.uid !== userId));
       
-      showToast(`User approved successfully and notification sent`, 'success');
+      showToast(`User approved successfully and notifications sent`, 'success');
     } catch (error: any) {
       console.error('❌ Error approving user:', error);
       showToast(error.message || 'Failed to approve user', 'error');
@@ -216,6 +219,42 @@ const PendingRegistrations: React.FC = () => {
       console.error('❌ Error sending approval SMS:', error);
       // Don't throw error here, we still want to mark the user as approved
       // even if SMS fails
+    }
+  };
+
+  const sendApprovalEmail = async (userId: string) => {
+    try {
+      const userToApprove = pendingUsers.find(u => u.uid === userId);
+      if (!userToApprove || !userToApprove.email) {
+        console.error('❌ User not found or no email address');
+        return;
+      }
+      
+      // Send email via Netlify Function
+      const response = await fetch('/.netlify/functions/send-acceptance-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userToApprove.email,
+          name: userToApprove.name,
+          eventDate: 'TBD - Details will be shared soon',
+          eventLocation: 'Tel Aviv, Israel - Exact location TBD'
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Email sending failed:', errorData);
+        throw new Error('Failed to send approval email');
+      }
+      
+      console.log('✅ Approval email sent successfully');
+    } catch (error) {
+      console.error('❌ Error sending approval email:', error);
+      // Don't throw error here, we still want to mark the user as approved
+      // even if email fails
     }
   };
 

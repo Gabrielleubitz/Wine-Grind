@@ -144,6 +144,36 @@ export const useRegistration = () => {
 
       console.log('✅ Registration saved successfully with UID as ID:', user.uid);
       setRegistration(finalData);
+
+      // Send email notifications
+      try {
+        // Send confirmation email to user
+        await fetch('/.netlify/functions/send-registration-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: finalData.email,
+            name: finalData.name
+          })
+        });
+
+        // Send admin notification
+        await fetch('/.netlify/functions/send-admin-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: finalData.name,
+            email: finalData.email,
+            phone: finalData.phone,
+            work: finalData.work
+          })
+        });
+
+        console.log('✅ Email notifications sent');
+      } catch (emailError) {
+        console.warn('⚠️ Email notifications failed:', emailError);
+        // Don't throw error - registration was successful even if emails failed
+      }
       
       return finalData;
     } catch (err: any) {
