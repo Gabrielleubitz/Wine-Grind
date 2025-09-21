@@ -253,6 +253,17 @@ const SpeakerAwareHeader: React.FC = () => {
             >
               Dashboard
             </button>
+            
+            <button 
+              onClick={() => handleNavigation('/events')}
+              className={`font-medium transition-colors ${
+                location.pathname === '/events' 
+                  ? 'text-red-600' 
+                  : 'text-gray-600 hover:text-red-600'
+              }`}
+            >
+              Events
+            </button>
 
             {/* Speaker Navigation - Only show if user is a speaker */}
             {isSpeaker && (
@@ -394,7 +405,7 @@ const SpeakerAwareHeader: React.FC = () => {
                   <div className="py-1">
                     <button
                       onClick={() => {
-                        navigate('/events');
+                        navigate('/dashboard');
                         // Find the edit profile button and click it
                         setTimeout(() => {
                           const editProfileButton = document.querySelector('button[aria-label="Edit Profile"]') || 
@@ -411,11 +422,19 @@ const SpeakerAwareHeader: React.FC = () => {
                     </button>
 
                     <button
+                      onClick={() => handleNavigation('/dashboard')}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      <span>My Dashboard</span>
+                    </button>
+
+                    <button
                       onClick={() => handleNavigation('/events')}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Calendar className="h-4 w-4" />
-                      <span>My Events</span>
+                      <span>Browse Events</span>
                     </button>
 
                     {/* Speaker-specific menu item */}
@@ -441,7 +460,7 @@ const SpeakerAwareHeader: React.FC = () => {
                     )}
 
                     <button
-                      onClick={() => handleNavigation('/events')}
+                      onClick={() => handleNavigation('/dashboard')}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Settings className="h-4 w-4" />
@@ -489,7 +508,7 @@ const SpeakerAwareHeader: React.FC = () => {
               </button>
               
               <button 
-                onClick={() => handleNavigation('/events')}
+                onClick={() => handleNavigation('/dashboard')}
                 className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   location.pathname === '/dashboard'
                     ? 'text-red-600 bg-red-50'
@@ -497,6 +516,17 @@ const SpeakerAwareHeader: React.FC = () => {
                 }`}
               >
                 Dashboard
+              </button>
+              
+              <button 
+                onClick={() => handleNavigation('/events')}
+                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  location.pathname === '/events'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+                }`}
+              >
+                Events
               </button>
 
               {/* Speaker Mobile Menu Item */}

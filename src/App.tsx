@@ -12,6 +12,7 @@ import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import SpeakersPage from './pages/SpeakersPage';
+import DashboardPage from './pages/DashboardPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
@@ -74,6 +75,14 @@ function App() {
         <Route path="/connect" element={<ConnectPage />} />
         
         {/* Protected Routes */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/events" 
           element={
@@ -194,7 +203,6 @@ function App() {
         />
         
         {/* Legacy routes - redirect to new format */}
-        <Route path="/dashboard" element={<Navigate to="/events" replace />} />
         
         {/* Catch-all route for 404s */}
         <Route path="*" element={<Navigate to="/" replace />} />
