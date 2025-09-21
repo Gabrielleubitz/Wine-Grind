@@ -260,7 +260,7 @@ const AdminSMS: React.FC = () => {
   const sendSMSViaNetlifyFunction = async (to: string, body: string): Promise<void> => {
     try {
       // FIXED: Use correct Netlify function URL format
-      const response = await fetch('/.netlify/functions/send-sms', {
+      const response = await fetch('/api/send-sms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -580,7 +580,7 @@ const AdminSMS: React.FC = () => {
           <div className="mt-8 bg-gray-50 rounded-2xl p-6">
             <h3 className="font-semibold text-gray-900 mb-3">📱 SMS Information:</h3>
             <ul className="text-sm text-gray-600 space-y-2">
-              <li>• <strong>Endpoint:</strong> Uses Netlify Function: <code>/.netlify/functions/send-sms</code></li>
+              <li>• <strong>Endpoint:</strong> Uses Vercel API: <code>/api/send-sms</code></li>
               <li>• <strong>Response Validation:</strong> All responses are validated as JSON before processing</li>
               <li>• <strong>Error Handling:</strong> Enhanced error logging with statusCode, responseText, and full error details</li>
               <li>• <strong>Phone Formatting:</strong> Automatically formats Israeli numbers (+972)</li>

@@ -157,7 +157,8 @@ const UserManagement: React.FC = () => {
     
     try {
       // Call Netlify function to delete user
-      const response = await fetch('/.netlify/functions/delete-user', {
+      // TODO: Convert to Vercel API
+      const response = await fetch('/api/delete-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
