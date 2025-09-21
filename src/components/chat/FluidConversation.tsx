@@ -22,7 +22,42 @@ const FluidConversation: React.FC<FluidConversationProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [typewriterKey, setTypewriterKey] = useState(0);
   const [showInput, setShowInput] = useState(true);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Wine & tech themed loading messages
+  const loadingMessages = [
+    "Swirling my wine glass... I mean, processing your request 🍷",
+    "Debugging this conversation with some premium wine logic...",
+    "Loading knowledge... Please wait while I aerate my thoughts",
+    "Compiling insights from our wine & grind database...",
+    "Fermenting the perfect response... This might take a moment",
+    "Running algorithms on premium grape-sourced intelligence...",
+    "Optimizing my neural networks with a splash of wine wisdom...",
+    "Processing... My servers run better with a glass of red nearby",
+    "Calculating the perfect blend of tech and wine knowledge...",
+    "Brewing up the answer in my silicon wine cellar...",
+    "Loading... Even AI needs time to properly taste ideas",
+    "Accessing my wine-enhanced knowledge base... Stand by",
+  ];
+
+  // Cycle through loading messages
+  useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex(prev => (prev + 1) % loadingMessages.length);
+      }, 2000); // Change message every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isLoading, loadingMessages.length]);
+
+  // Reset loading message index when loading starts
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingMessageIndex(0);
+    }
+  }, [isLoading]);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -105,9 +140,18 @@ const FluidConversation: React.FC<FluidConversationProps> = ({
           {/* Message display area */}
           <div className="mb-16">
             {isLoading ? (
-              // Loading state with blinking cursor
+              // Loading state with rotating wine/tech humor
               <div className="text-gray-900 text-2xl md:text-3xl leading-relaxed font-light tracking-wide">
-                <span className="animate-pulse text-red-500 font-mono">|</span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                  </div>
+                  <span className="text-gray-600 text-lg md:text-xl font-light animate-pulse">
+                    {loadingMessages[loadingMessageIndex]}
+                  </span>
+                </div>
               </div>
             ) : currentMessage ? (
               // Current message with typewriter effect
