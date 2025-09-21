@@ -31,6 +31,7 @@ import SpeakerManagement from './pages/admin/SpeakerManagement';
 import UserManagement from './pages/admin/UserManagement';
 import PendingRegistrations from './pages/admin/PendingRegistrations';
 import SystemTestPage from './pages/admin/SystemTestPage';
+import AdminBadges from './pages/admin/Badges';
 import SpeakerDashboard from './pages/SpeakerDashboard';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ConnectPage from './pages/ConnectPage';
@@ -198,6 +199,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminCheckIn />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/badges" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminBadges />
             </ProtectedRoute>
           } 
         />

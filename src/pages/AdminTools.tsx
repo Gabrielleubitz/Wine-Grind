@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Navigate, Link } from 'react-router-dom';
 import { EventService } from '../services/eventService';
 import { useAdminScanner } from '../hooks/useAdminScanner';
-import { Calendar, Users, ChevronDown, MessageSquare, Megaphone, Mic, UserCog, UserPlus, Zap } from 'lucide-react';
+import { Calendar, Users, ChevronDown, MessageSquare, Megaphone, Mic, UserCog, UserPlus, Zap, FileText } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -393,7 +393,7 @@ const AdminTools: React.FC = () => {
         </div>
 
         {/* Additional Admin Tools */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-5 gap-6 mb-12">
           <Link
             to="/admin/events/create"
             className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
@@ -457,6 +457,21 @@ const AdminTools: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">System Test</h3>
                 <p className="text-gray-600 text-sm">Test APIs and integrations</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/badges"
+            className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0">
+                <FileText className="h-8 w-8 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Badge Generator</h3>
+                <p className="text-gray-600 text-sm">Generate lanyard badges PDF</p>
               </div>
             </div>
           </Link>
