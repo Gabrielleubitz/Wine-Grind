@@ -52,12 +52,12 @@ const FluidConversation: React.FC<FluidConversationProps> = ({
     }
   }, [isLoading, loadingMessages.length]);
 
-  // Reset loading message index when loading starts
+  // Set random loading message index when loading starts
   useEffect(() => {
     if (isLoading) {
-      setLoadingMessageIndex(0);
+      setLoadingMessageIndex(Math.floor(Math.random() * loadingMessages.length));
     }
-  }, [isLoading]);
+  }, [isLoading, loadingMessages.length]);
 
   // Initialize with welcome message
   useEffect(() => {
