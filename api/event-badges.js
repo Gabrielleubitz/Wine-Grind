@@ -89,82 +89,34 @@ const getEventAttendees = async (eventId) => {
   try {
     console.log(`🎫 Fetching attendees for event: ${eventId}`);
     
-    // First, try to get confirmed attendees from flat collection
-    let registrationsSnapshot = await db.collection('registrations')
-      .where('eventId', '==', eventId)
-      .where('status', '==', 'confirmed')
+    // Based on EventService analysis, registrations are stored as subcollections under events
+    console.log(`🔍 Getting registrations from: events/${eventId}/registrations`);
+    const registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
       .get();
-
-    console.log(`📊 Flat collection - found ${registrationsSnapshot.size} confirmed registrations`);
-
-    // If no results, try subcollection pattern
-    if (registrationsSnapshot.size === 0) {
-      console.log(`🔍 Trying subcollection pattern: events/${eventId}/registrations`);
-      registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
-        .where('status', '==', 'confirmed')
-        .get();
-        
-      console.log(`📊 Subcollection - found ${registrationsSnapshot.size} confirmed registrations`);
-    }
-
-    // If no confirmed attendees, try other common status values
-    if (registrationsSnapshot.size === 0) {
-      const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
       
-      for (const status of alternativeStatuses) {
-        // Try flat collection first
-        registrationsSnapshot = await db.collection('registrations')
-          .where('eventId', '==', eventId)
-          .where('status', '==', status)
-          .get();
-          
-        if (registrationsSnapshot.size > 0) {
-          console.log(`✅ Flat collection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
-          break;
-        }
-        
-        // Try subcollection if flat collection had no results
-        registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
-          .where('status', '==', status)
-          .get();
-          
-        if (registrationsSnapshot.size > 0) {
-          console.log(`✅ Subcollection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
-          break;
-        }
-      }
-    }
-
-    // If still no attendees, get all registrations for this event
-    if (registrationsSnapshot.size === 0) {
-      console.log(`⚠️ No status-filtered registrations found, fetching all registrations`);
-      
-      // Try flat collection
-      registrationsSnapshot = await db.collection('registrations')
-        .where('eventId', '==', eventId)
-        .get();
-        
-      console.log(`📋 Flat collection - found ${registrationsSnapshot.size} total registrations`);
-      
-      // If still nothing, try subcollection
-      if (registrationsSnapshot.size === 0) {
-        registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
-          .get();
-          
-        console.log(`📋 Subcollection - found ${registrationsSnapshot.size} total registrations`);
-      }
+    console.log(`📊 Found ${registrationsSnapshot.size} registrations`);
+    
+    // Log sample registration data
+    if (registrationsSnapshot.size > 0) {
+      const firstDoc = registrationsSnapshot.docs[0];
+      console.log(`📄 Sample registration:`, {
+        id: firstDoc.id,
+        data: firstDoc.data()
+      });
     }
 
     const attendees = [];
     registrationsSnapshot.forEach(doc => {
       const registration = doc.data();
+      // In subcollection structure, doc.id is the userId
+      const userId = doc.id;
       attendees.push({
-        id: doc.id,
+        id: userId,
         first_name: registration.name?.split(' ')[0] || 'Guest',
         last_name: registration.name?.split(' ').slice(1).join(' ') || '',
         company: registration.work || '',
         linkedin: registration.linkedinUsername ? `linkedin.com/in/${registration.linkedinUsername}` : '',
-        qr_code: `https://winengrind.com/connect?to=${registration.userId}&event=${eventId}`,
+        qr_code: `https://winengrind.com/connect?to=${userId}&event=${eventId}`,
         email: registration.email || ''
       });
     });

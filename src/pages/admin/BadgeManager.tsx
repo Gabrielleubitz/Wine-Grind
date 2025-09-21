@@ -73,22 +73,11 @@ const BadgeManager: React.FC = () => {
         // Count attendees for this event - try different status values
         console.log(`🔍 Checking registrations for event: ${eventDoc.id} (${eventData.name})`);
         
-        // First, try to get registrations from flat collection with eventId
-        let allRegistrationsQuery = query(
-          collection(db, 'registrations'),
-          where('eventId', '==', eventDoc.id)
-        );
-        
-        let allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
-        console.log(`📊 Flat collection registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
-        
-        // If no results, try subcollection pattern: events/{eventId}/registrations
-        if (allRegistrationsSnapshot.size === 0) {
-          console.log(`🔍 Trying subcollection pattern: events/${eventDoc.id}/registrations`);
-          allRegistrationsQuery = query(collection(db, 'events', eventDoc.id, 'registrations'));
-          allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
-          console.log(`📊 Subcollection registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
-        }
+        // Based on EventService analysis, registrations are stored as subcollections
+        console.log(`🔍 Getting registrations from: events/${eventDoc.id}/registrations`);
+        const allRegistrationsQuery = query(collection(db, 'events', eventDoc.id, 'registrations'));
+        const allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
+        console.log(`📊 Subcollection registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
         
         // If no registrations found, let's investigate alternative field names
         if (allRegistrationsSnapshot.size === 0) {
@@ -198,52 +187,21 @@ const BadgeManager: React.FC = () => {
         
         console.log(`📈 Status breakdown for ${eventData.name}:`, statusCounts);
         
-        // Determine which collection pattern to use for status filtering
-        const isSubcollection = allRegistrationsSnapshot.size > 0 && allRegistrationsQuery.toString().includes(`events/${eventDoc.id}/registrations`);
+        // All registrations are valid attendees since registration requires confirmation
+        // Based on EventService, there's no separate status field - just being in the collection means confirmed
+        let attendeeCount = allRegistrationsSnapshot.size;
         
-        // Count confirmed attendees (using the correct collection pattern)
-        let confirmedQuery;
-        if (isSubcollection) {
-          confirmedQuery = query(
-            collection(db, 'events', eventDoc.id, 'registrations'),
-            where('status', '==', 'confirmed')
-          );
-        } else {
-          confirmedQuery = query(
-            collection(db, 'registrations'),
-            where('eventId', '==', eventDoc.id),
-            where('status', '==', 'confirmed')
-          );
-        }
-        
-        const confirmedSnapshot = await getDocs(confirmedQuery);
-        let attendeeCount = confirmedSnapshot.size;
-        
-        // If no confirmed registrations, try other common status values
-        if (attendeeCount === 0) {
-          const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
+        // However, let's still check if there are any status-based filters needed
+        if (attendeeCount > 0) {
+          console.log(`✅ Found ${attendeeCount} registrations for ${eventData.name}`);
           
-          for (const status of alternativeStatuses) {
-            let altQuery;
-            if (isSubcollection) {
-              altQuery = query(
-                collection(db, 'events', eventDoc.id, 'registrations'),
-                where('status', '==', status)
-              );
-            } else {
-              altQuery = query(
-                collection(db, 'registrations'),
-                where('eventId', '==', eventDoc.id),
-                where('status', '==', status)
-              );
-            }
-            
-            const altSnapshot = await getDocs(altQuery);
-            if (altSnapshot.size > 0) {
-              console.log(`✅ Found ${altSnapshot.size} registrations with status '${status}' for ${eventData.name}`);
-              attendeeCount = altSnapshot.size;
-              break;
-            }
+          // Log sample registration data to understand structure
+          const firstDoc = allRegistrationsSnapshot.docs[0];
+          if (firstDoc) {
+            console.log(`📄 Sample registration data:`, {
+              id: firstDoc.id,
+              data: firstDoc.data()
+            });
           }
         }
         

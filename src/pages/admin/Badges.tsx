@@ -92,94 +92,35 @@ const AdminBadges: React.FC = () => {
       };
       setEvent(event);
 
-      // Load attendees - try different status values and collection patterns
+      // Load attendees using subcollection pattern from EventService analysis
       console.log(`🔍 Loading attendees for event: ${eventId}`);
+      console.log(`🔍 Getting registrations from: events/${eventId}/registrations`);
       
-      // First try confirmed attendees from flat collection
-      let registrationsQuery = query(
-        collection(db, 'registrations'),
-        where('eventId', '==', eventId),
-        where('status', '==', 'confirmed')
-      );
-
-      let registrationsSnapshot = await getDocs(registrationsQuery);
-      console.log(`📊 Flat collection - found ${registrationsSnapshot.size} confirmed registrations`);
+      const registrationsQuery = query(collection(db, 'events', eventId, 'registrations'));
+      const registrationsSnapshot = await getDocs(registrationsQuery);
+      console.log(`📊 Found ${registrationsSnapshot.size} registrations`);
       
-      // If no results, try subcollection pattern
-      if (registrationsSnapshot.size === 0) {
-        console.log(`🔍 Trying subcollection pattern: events/${eventId}/registrations`);
-        registrationsQuery = query(
-          collection(db, 'events', eventId, 'registrations'),
-          where('status', '==', 'confirmed')
-        );
-        registrationsSnapshot = await getDocs(registrationsQuery);
-        console.log(`📊 Subcollection - found ${registrationsSnapshot.size} confirmed registrations`);
-      }
-
-      // If no confirmed attendees, try other common status values
-      if (registrationsSnapshot.size === 0) {
-        const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
-        
-        for (const status of alternativeStatuses) {
-          // Try flat collection first
-          registrationsQuery = query(
-            collection(db, 'registrations'),
-            where('eventId', '==', eventId),
-            where('status', '==', status)
-          );
-          
-          registrationsSnapshot = await getDocs(registrationsQuery);
-          if (registrationsSnapshot.size > 0) {
-            console.log(`✅ Flat collection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
-            break;
-          }
-          
-          // Try subcollection if flat collection had no results
-          registrationsQuery = query(
-            collection(db, 'events', eventId, 'registrations'),
-            where('status', '==', status)
-          );
-          
-          registrationsSnapshot = await getDocs(registrationsQuery);
-          if (registrationsSnapshot.size > 0) {
-            console.log(`✅ Subcollection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
-            break;
-          }
-        }
-      }
-
-      // If still no attendees, get all registrations for this event
-      if (registrationsSnapshot.size === 0) {
-        console.log(`⚠️ No status-filtered registrations found, fetching all registrations`);
-        
-        // Try flat collection
-        registrationsQuery = query(
-          collection(db, 'registrations'),
-          where('eventId', '==', eventId)
-        );
-        registrationsSnapshot = await getDocs(registrationsQuery);
-        console.log(`📋 Flat collection - found ${registrationsSnapshot.size} total registrations`);
-        
-        // If still nothing, try subcollection
-        if (registrationsSnapshot.size === 0) {
-          registrationsQuery = query(collection(db, 'events', eventId, 'registrations'));
-          registrationsSnapshot = await getDocs(registrationsQuery);
-          console.log(`📋 Subcollection - found ${registrationsSnapshot.size} total registrations`);
-        }
+      // Log sample registration data
+      if (registrationsSnapshot.size > 0) {
+        const firstDoc = registrationsSnapshot.docs[0];
+        console.log(`📄 Sample registration:`, {
+          id: firstDoc.id,
+          data: firstDoc.data()
+        });
       }
 
       const attendeesData: AttendeeData[] = [];
       registrationsSnapshot.forEach(doc => {
         const registration = doc.data();
         attendeesData.push({
-          id: doc.id,
+          id: doc.id, // This is the userId in the subcollection structure
           name: registration.name || 'Guest',
           email: registration.email || '',
           work: registration.work || '',
           linkedinUsername: registration.linkedinUsername || '',
           phone: registration.phone || '',
-          status: registration.status || 'registered',
-          userId: registration.userId || ''
+          status: 'registered', // All registrations in subcollection are valid
+          userId: doc.id // userId is the document ID in subcollection
         });
       });
 
