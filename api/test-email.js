@@ -78,17 +78,22 @@ module.exports = async function handler(req, res) {
     console.log('✅ Test email sent successfully:', {
       to: recipient,
       status: response.response.status,
+      mailjetResponse: response.response.data,
       timestamp: new Date().toISOString()
     });
 
-    // Return success response
+    // Return success response with detailed Mailjet info
     return res.status(200).json({ 
       success: true,
       message: 'Test email sent successfully',
       details: {
         recipient,
         subject,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        mailjetStatus: response.response.status,
+        mailjetResponse: response.response.data?.Messages?.[0],
+        messageId: response.response.data?.Messages?.[0]?.MessageID,
+        status: response.response.data?.Messages?.[0]?.Status
       }
     });
 
