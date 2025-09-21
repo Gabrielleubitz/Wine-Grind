@@ -25,7 +25,7 @@ const ChatWidget: React.FC = () => {
       setMessages([
         {
           id: Date.now().toString(),
-          text: "Hey there! I'm excited to tell you about Wine & Grind. What would you like to know?",
+          text: "Hey there! I'm your Wine & Grind assistant and I know everything about our exclusive events. What would you like to know?",
           isUser: false,
           timestamp: new Date(),
         },
