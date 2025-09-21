@@ -252,8 +252,8 @@ const BadgeManager: React.FC = () => {
     try {
       console.log(`🎫 Generating badges for event: ${eventId}`);
       
-      // Call the badges API using query parameter
-      const response = await fetch(`/api/event-badges?eventId=${eventId}`, {
+      // Call the enhanced badges API using query parameter
+      const response = await fetch(`/api/event-badges-enhanced?eventId=${eventId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',
