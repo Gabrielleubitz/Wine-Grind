@@ -73,14 +73,65 @@ const BadgeManager: React.FC = () => {
         // Count attendees for this event - try different status values
         console.log(`🔍 Checking registrations for event: ${eventDoc.id} (${eventData.name})`);
         
-        // First, get all registrations for this event to see what statuses exist
-        const allRegistrationsQuery = query(
+        // First, try to get registrations from flat collection with eventId
+        let allRegistrationsQuery = query(
           collection(db, 'registrations'),
           where('eventId', '==', eventDoc.id)
         );
         
-        const allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
-        console.log(`📊 Total registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
+        let allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
+        console.log(`📊 Flat collection registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
+        
+        // If no results, try subcollection pattern: events/{eventId}/registrations
+        if (allRegistrationsSnapshot.size === 0) {
+          console.log(`🔍 Trying subcollection pattern: events/${eventDoc.id}/registrations`);
+          allRegistrationsQuery = query(collection(db, 'events', eventDoc.id, 'registrations'));
+          allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
+          console.log(`📊 Subcollection registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
+        }
+        
+        // If no registrations found, let's investigate alternative field names
+        if (allRegistrationsSnapshot.size === 0) {
+          console.log(`🔍 No registrations found with eventId: ${eventDoc.id}, checking for alternative field names...`);
+          
+          // Try alternative eventId field names
+          const alternativeFields = ['eventid', 'event_id', 'event', 'eventSlug'];
+          let foundAlternative = false;
+          
+          for (const fieldName of alternativeFields) {
+            const altQuery = query(
+              collection(db, 'registrations'),
+              where(fieldName, '==', eventDoc.id)
+            );
+            
+            const altSnapshot = await getDocs(altQuery);
+            if (altSnapshot.size > 0) {
+              console.log(`✅ Found ${altSnapshot.size} registrations using field '${fieldName}'`);
+              foundAlternative = true;
+              break;
+            }
+          }
+          
+          // If still no results, let's see what's actually in the registrations collection
+          if (!foundAlternative) {
+            console.log(`🔍 Checking first 5 registrations to understand the structure...`);
+            const sampleQuery = query(collection(db, 'registrations'));
+            const sampleSnapshot = await getDocs(sampleQuery);
+            
+            let count = 0;
+            sampleSnapshot.forEach(doc => {
+              if (count < 5) {
+                console.log(`📋 Sample registration ${count + 1}:`, {
+                  id: doc.id,
+                  data: doc.data()
+                });
+                count++;
+              }
+            });
+            
+            console.log(`📊 Total registrations in collection: ${sampleSnapshot.size}`);
+          }
+        }
         
         // Log the status values we find
         const statusCounts: Record<string, number> = {};
@@ -92,12 +143,23 @@ const BadgeManager: React.FC = () => {
         
         console.log(`📈 Status breakdown for ${eventData.name}:`, statusCounts);
         
-        // Count confirmed attendees (but also try common alternatives)
-        const confirmedQuery = query(
-          collection(db, 'registrations'),
-          where('eventId', '==', eventDoc.id),
-          where('status', '==', 'confirmed')
-        );
+        // Determine which collection pattern to use for status filtering
+        const isSubcollection = allRegistrationsSnapshot.size > 0 && allRegistrationsQuery.toString().includes(`events/${eventDoc.id}/registrations`);
+        
+        // Count confirmed attendees (using the correct collection pattern)
+        let confirmedQuery;
+        if (isSubcollection) {
+          confirmedQuery = query(
+            collection(db, 'events', eventDoc.id, 'registrations'),
+            where('status', '==', 'confirmed')
+          );
+        } else {
+          confirmedQuery = query(
+            collection(db, 'registrations'),
+            where('eventId', '==', eventDoc.id),
+            where('status', '==', 'confirmed')
+          );
+        }
         
         const confirmedSnapshot = await getDocs(confirmedQuery);
         let attendeeCount = confirmedSnapshot.size;
@@ -107,11 +169,19 @@ const BadgeManager: React.FC = () => {
           const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
           
           for (const status of alternativeStatuses) {
-            const altQuery = query(
-              collection(db, 'registrations'),
-              where('eventId', '==', eventDoc.id),
-              where('status', '==', status)
-            );
+            let altQuery;
+            if (isSubcollection) {
+              altQuery = query(
+                collection(db, 'events', eventDoc.id, 'registrations'),
+                where('status', '==', status)
+              );
+            } else {
+              altQuery = query(
+                collection(db, 'registrations'),
+                where('eventId', '==', eventDoc.id),
+                where('status', '==', status)
+              );
+            }
             
             const altSnapshot = await getDocs(altQuery);
             if (altSnapshot.size > 0) {

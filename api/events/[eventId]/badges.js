@@ -89,26 +89,47 @@ const getEventAttendees = async (eventId) => {
   try {
     console.log(`🎫 Fetching attendees for event: ${eventId}`);
     
-    // First, try to get confirmed attendees
+    // First, try to get confirmed attendees from flat collection
     let registrationsSnapshot = await db.collection('registrations')
       .where('eventId', '==', eventId)
       .where('status', '==', 'confirmed')
       .get();
 
-    console.log(`📊 Found ${registrationsSnapshot.size} confirmed registrations`);
+    console.log(`📊 Flat collection - found ${registrationsSnapshot.size} confirmed registrations`);
+
+    // If no results, try subcollection pattern
+    if (registrationsSnapshot.size === 0) {
+      console.log(`🔍 Trying subcollection pattern: events/${eventId}/registrations`);
+      registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
+        .where('status', '==', 'confirmed')
+        .get();
+        
+      console.log(`📊 Subcollection - found ${registrationsSnapshot.size} confirmed registrations`);
+    }
 
     // If no confirmed attendees, try other common status values
     if (registrationsSnapshot.size === 0) {
       const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
       
       for (const status of alternativeStatuses) {
+        // Try flat collection first
         registrationsSnapshot = await db.collection('registrations')
           .where('eventId', '==', eventId)
           .where('status', '==', status)
           .get();
           
         if (registrationsSnapshot.size > 0) {
-          console.log(`✅ Found ${registrationsSnapshot.size} registrations with status '${status}'`);
+          console.log(`✅ Flat collection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
+          break;
+        }
+        
+        // Try subcollection if flat collection had no results
+        registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
+          .where('status', '==', status)
+          .get();
+          
+        if (registrationsSnapshot.size > 0) {
+          console.log(`✅ Subcollection - found ${registrationsSnapshot.size} registrations with status '${status}'`);
           break;
         }
       }
@@ -117,11 +138,21 @@ const getEventAttendees = async (eventId) => {
     // If still no attendees, get all registrations for this event
     if (registrationsSnapshot.size === 0) {
       console.log(`⚠️ No status-filtered registrations found, fetching all registrations`);
+      
+      // Try flat collection
       registrationsSnapshot = await db.collection('registrations')
         .where('eventId', '==', eventId)
         .get();
         
-      console.log(`📋 Found ${registrationsSnapshot.size} total registrations`);
+      console.log(`📋 Flat collection - found ${registrationsSnapshot.size} total registrations`);
+      
+      // If still nothing, try subcollection
+      if (registrationsSnapshot.size === 0) {
+        registrationsSnapshot = await db.collection('events').doc(eventId).collection('registrations')
+          .get();
+          
+        console.log(`📋 Subcollection - found ${registrationsSnapshot.size} total registrations`);
+      }
     }
 
     const attendees = [];
