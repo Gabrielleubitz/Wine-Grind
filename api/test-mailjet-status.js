@@ -69,11 +69,12 @@ If you receive this email, Mailjet is working correctly.`,
       SandBoxMode: false  // Explicitly disable sandbox mode
     };
 
-    console.log('📤 Sending with payload:', JSON.stringify(emailPayload, null, 2));
+    console.log('📤 Sending email with SandBoxMode:', emailPayload.SandBoxMode);
 
     const response = await mailjet.post('send', { version: 'v3.1' }).request(emailPayload);
 
-    console.log('📨 Full Response:', JSON.stringify(response.response, null, 2));
+    console.log('📨 Response Status:', response.response.status);
+    console.log('📨 Response Data:', response.response.data);
 
     const messageInfo = response.response.data?.Messages?.[0];
     
@@ -90,7 +91,7 @@ If you receive this email, Mailjet is working correctly.`,
         to: messageInfo?.To,
         sandboxMode: emailPayload.SandBoxMode
       },
-      rawResponse: response.response.data,
+      // rawResponse removed to avoid circular JSON
       timestamp: new Date().toISOString()
     });
 
