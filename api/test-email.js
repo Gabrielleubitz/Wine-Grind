@@ -29,6 +29,16 @@ module.exports = async function handler(req, res) {
     const mailjetPublicKey = process.env.MJ_APIKEY_PUBLIC;
     const mailjetPrivateKey = process.env.MJ_APIKEY_PRIVATE;
 
+    // DEBUG: Log key info
+    console.log('🔧 DEBUG - API Keys:', {
+      publicKeyExists: !!mailjetPublicKey,
+      privateKeyExists: !!mailjetPrivateKey,
+      publicKeyLength: mailjetPublicKey?.length,
+      privateKeyLength: mailjetPrivateKey?.length,
+      publicKeyPreview: mailjetPublicKey?.substring(0, 8) + '...',
+      privateKeyPreview: mailjetPrivateKey?.substring(0, 8) + '...'
+    });
+
     // Validate Mailjet credentials
     if (!mailjetPublicKey || !mailjetPrivateKey) {
       console.error('❌ Missing Mailjet credentials');
@@ -55,7 +65,7 @@ module.exports = async function handler(req, res) {
             Name: "Wine & Grind"
           },
           To: [{ Email: recipient }],
-          Subject: `[DEBUG] ${subject}`,
+          Subject: subject,
           TextPart: `${message}\n\n--- DEBUG INFO ---\nTimestamp: ${new Date().toISOString()}\nTest ID: ${Date.now()}\nSandbox Mode: Disabled`,
           HTMLPart: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
