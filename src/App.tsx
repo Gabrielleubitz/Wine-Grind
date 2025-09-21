@@ -32,6 +32,7 @@ import UserManagement from './pages/admin/UserManagement';
 import PendingRegistrations from './pages/admin/PendingRegistrations';
 import SystemTestPage from './pages/admin/SystemTestPage';
 import AdminBadges from './pages/admin/Badges';
+import BadgeManager from './pages/admin/BadgeManager';
 import SpeakerDashboard from './pages/SpeakerDashboard';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ConnectPage from './pages/ConnectPage';
@@ -204,6 +205,14 @@ function App() {
         />
         <Route 
           path="/admin/badges" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <BadgeManager />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/badges/event" 
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminBadges />

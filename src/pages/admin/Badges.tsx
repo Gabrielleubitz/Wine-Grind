@@ -220,10 +220,10 @@ const AdminBadges: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate('/admin/events')}
+              onClick={() => navigate('/admin/badges')}
               className="mt-4 text-red-600 hover:text-red-800 font-medium"
             >
-              ← Back to Events
+              ← Back to Badge Manager
             </button>
           </div>
         </div>
@@ -251,11 +251,11 @@ const AdminBadges: React.FC = () => {
         {/* Back Button */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/admin/events')}
+            onClick={() => navigate('/admin/badges')}
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Events</span>
+            <span>Back to Badge Manager</span>
           </button>
         </div>
 

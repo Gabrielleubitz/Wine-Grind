@@ -470,8 +470,8 @@ const AdminTools: React.FC = () => {
                 <FileText className="h-8 w-8 text-indigo-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Badge Generator</h3>
-                <p className="text-gray-600 text-sm">Generate lanyard badges PDF</p>
+                <h3 className="text-lg font-semibold text-gray-900">Badge Management</h3>
+                <p className="text-gray-600 text-sm">Manage event badges & generate PDFs</p>
               </div>
             </div>
           </Link>
