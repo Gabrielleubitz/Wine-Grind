@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
 
     console.log(`📧 Sending test email to ${recipient}`);
 
-    // Send email via Mailjet
+    // Send email via Mailjet with explicit sandbox mode disabled
     const response = await mailjet.post('send', { version: 'v3.1' }).request({
       Messages: [
         {
@@ -55,8 +55,8 @@ module.exports = async function handler(req, res) {
             Name: "Wine & Grind"
           },
           To: [{ Email: recipient }],
-          Subject: subject,
-          TextPart: message,
+          Subject: `[DEBUG] ${subject}`,
+          TextPart: `${message}\n\n--- DEBUG INFO ---\nTimestamp: ${new Date().toISOString()}\nTest ID: ${Date.now()}\nSandbox Mode: Disabled`,
           HTMLPart: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
   <div style="text-align: center; margin-bottom: 20px;">
@@ -65,14 +65,19 @@ module.exports = async function handler(req, res) {
   
   <p>${message.replace(/\n/g, '<br>')}</p>
   
-  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center;">
-    <p>This is a test email from the Wine & Grind admin panel.</p>
-    <p>Timestamp: ${new Date().toISOString()}</p>
+  <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+    <h3 style="color: #1976d2; margin-top: 0;">🔧 DEBUG INFO</h3>
+    <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+    <p><strong>Test ID:</strong> ${Date.now()}</p>
+    <p><strong>From:</strong> info@winengrind.com</p>
+    <p><strong>Sandbox Mode:</strong> Disabled</p>
+    <p><strong>API Version:</strong> v3.1</p>
   </div>
 </div>
           `
         }
-      ]
+      ],
+      SandBoxMode: false  // Explicitly disable sandbox mode
     });
 
     console.log('✅ Test email sent successfully:', {
