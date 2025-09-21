@@ -112,24 +112,79 @@ const BadgeManager: React.FC = () => {
             }
           }
           
-          // If still no results, let's see what's actually in the registrations collection
+          // If still no results, let's see what collections actually exist
           if (!foundAlternative) {
-            console.log(`🔍 Checking first 5 registrations to understand the structure...`);
-            const sampleQuery = query(collection(db, 'registrations'));
-            const sampleSnapshot = await getDocs(sampleQuery);
+            console.log(`🔍 Checking what collections exist in the database...`);
             
-            let count = 0;
-            sampleSnapshot.forEach(doc => {
-              if (count < 5) {
-                console.log(`📋 Sample registration ${count + 1}:`, {
-                  id: doc.id,
-                  data: doc.data()
-                });
-                count++;
+            // Check common collection names for registrations
+            const possibleCollections = ['registrations', 'registration', 'users', 'attendees', 'signups', 'event-registrations'];
+            
+            for (const collectionName of possibleCollections) {
+              try {
+                const testQuery = query(collection(db, collectionName));
+                const testSnapshot = await getDocs(testQuery);
+                
+                if (testSnapshot.size > 0) {
+                  console.log(`📋 Found collection '${collectionName}' with ${testSnapshot.size} documents`);
+                  
+                  // Show sample documents
+                  let count = 0;
+                  testSnapshot.forEach(doc => {
+                    if (count < 3) {
+                      console.log(`📄 Sample from ${collectionName} ${count + 1}:`, {
+                        id: doc.id,
+                        data: doc.data()
+                      });
+                      count++;
+                    }
+                  });
+                } else {
+                  console.log(`❌ Collection '${collectionName}' is empty`);
+                }
+              } catch (error) {
+                console.log(`❌ Error accessing collection '${collectionName}':`, error.message);
               }
-            });
+            }
             
-            console.log(`📊 Total registrations in collection: ${sampleSnapshot.size}`);
+            console.log(`🔍 Also checking for subcollections under first few events...`);
+            try {
+              const eventsQuery = query(collection(db, 'events'));
+              const eventsSnapshot = await getDocs(eventsQuery);
+              
+              let eventCount = 0;
+              for (const eventDoc of eventsSnapshot.docs) {
+                if (eventCount < 3) {
+                  console.log(`📅 Checking subcollections for event: ${eventDoc.id}`);
+                  
+                  // Try to get subcollections (this is limited in web SDK)
+                  const possibleSubcollections = ['registrations', 'attendees', 'participants'];
+                  for (const subName of possibleSubcollections) {
+                    try {
+                      const subQuery = query(collection(db, 'events', eventDoc.id, subName));
+                      const subSnapshot = await getDocs(subQuery);
+                      
+                      if (subSnapshot.size > 0) {
+                        console.log(`📋 Found subcollection 'events/${eventDoc.id}/${subName}' with ${subSnapshot.size} documents`);
+                        
+                        // Show one sample
+                        const firstDoc = subSnapshot.docs[0];
+                        if (firstDoc) {
+                          console.log(`📄 Sample from events/${eventDoc.id}/${subName}:`, {
+                            id: firstDoc.id,
+                            data: firstDoc.data()
+                          });
+                        }
+                      }
+                    } catch (subError) {
+                      // Silent - subcollection doesn't exist
+                    }
+                  }
+                  eventCount++;
+                }
+              }
+            } catch (error) {
+              console.log(`❌ Error checking event subcollections:`, error.message);
+            }
           }
         }
         
