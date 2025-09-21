@@ -89,10 +89,40 @@ const getEventAttendees = async (eventId) => {
   try {
     console.log(`🎫 Fetching attendees for event: ${eventId}`);
     
-    const registrationsSnapshot = await db.collection('registrations')
+    // First, try to get confirmed attendees
+    let registrationsSnapshot = await db.collection('registrations')
       .where('eventId', '==', eventId)
       .where('status', '==', 'confirmed')
       .get();
+
+    console.log(`📊 Found ${registrationsSnapshot.size} confirmed registrations`);
+
+    // If no confirmed attendees, try other common status values
+    if (registrationsSnapshot.size === 0) {
+      const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
+      
+      for (const status of alternativeStatuses) {
+        registrationsSnapshot = await db.collection('registrations')
+          .where('eventId', '==', eventId)
+          .where('status', '==', status)
+          .get();
+          
+        if (registrationsSnapshot.size > 0) {
+          console.log(`✅ Found ${registrationsSnapshot.size} registrations with status '${status}'`);
+          break;
+        }
+      }
+    }
+
+    // If still no attendees, get all registrations for this event
+    if (registrationsSnapshot.size === 0) {
+      console.log(`⚠️ No status-filtered registrations found, fetching all registrations`);
+      registrationsSnapshot = await db.collection('registrations')
+        .where('eventId', '==', eventId)
+        .get();
+        
+      console.log(`📋 Found ${registrationsSnapshot.size} total registrations`);
+    }
 
     const attendees = [];
     registrationsSnapshot.forEach(doc => {
@@ -108,7 +138,7 @@ const getEventAttendees = async (eventId) => {
       });
     });
 
-    console.log(`✅ Found ${attendees.length} confirmed attendees`);
+    console.log(`🎫 Final attendee count: ${attendees.length}`);
     return attendees;
   } catch (error) {
     console.error('❌ Error fetching attendees:', error);

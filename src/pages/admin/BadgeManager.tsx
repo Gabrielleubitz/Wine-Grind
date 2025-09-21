@@ -70,15 +70,65 @@ const BadgeManager: React.FC = () => {
       for (const eventDoc of eventsSnapshot.docs) {
         const eventData = eventDoc.data();
         
-        // Count confirmed attendees for this event
-        const registrationsQuery = query(
+        // Count attendees for this event - try different status values
+        console.log(`🔍 Checking registrations for event: ${eventDoc.id} (${eventData.name})`);
+        
+        // First, get all registrations for this event to see what statuses exist
+        const allRegistrationsQuery = query(
+          collection(db, 'registrations'),
+          where('eventId', '==', eventDoc.id)
+        );
+        
+        const allRegistrationsSnapshot = await getDocs(allRegistrationsQuery);
+        console.log(`📊 Total registrations for ${eventData.name}: ${allRegistrationsSnapshot.size}`);
+        
+        // Log the status values we find
+        const statusCounts: Record<string, number> = {};
+        allRegistrationsSnapshot.forEach(doc => {
+          const registration = doc.data();
+          const status = registration.status || 'undefined';
+          statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        
+        console.log(`📈 Status breakdown for ${eventData.name}:`, statusCounts);
+        
+        // Count confirmed attendees (but also try common alternatives)
+        const confirmedQuery = query(
           collection(db, 'registrations'),
           where('eventId', '==', eventDoc.id),
           where('status', '==', 'confirmed')
         );
         
-        const registrationsSnapshot = await getDocs(registrationsQuery);
-        const attendeeCount = registrationsSnapshot.size;
+        const confirmedSnapshot = await getDocs(confirmedQuery);
+        let attendeeCount = confirmedSnapshot.size;
+        
+        // If no confirmed registrations, try other common status values
+        if (attendeeCount === 0) {
+          const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
+          
+          for (const status of alternativeStatuses) {
+            const altQuery = query(
+              collection(db, 'registrations'),
+              where('eventId', '==', eventDoc.id),
+              where('status', '==', status)
+            );
+            
+            const altSnapshot = await getDocs(altQuery);
+            if (altSnapshot.size > 0) {
+              console.log(`✅ Found ${altSnapshot.size} registrations with status '${status}' for ${eventData.name}`);
+              attendeeCount = altSnapshot.size;
+              break;
+            }
+          }
+        }
+        
+        // If still no attendees, count all registrations (maybe status field is missing/different)
+        if (attendeeCount === 0 && allRegistrationsSnapshot.size > 0) {
+          console.log(`⚠️ No status-filtered registrations found, using total count: ${allRegistrationsSnapshot.size}`);
+          attendeeCount = allRegistrationsSnapshot.size;
+        }
+        
+        console.log(`🎫 Final attendee count for ${eventData.name}: ${attendeeCount}`);
 
         const eventDate = eventData.date?.toDate ? eventData.date.toDate() : new Date(eventData.date);
         const now = new Date();

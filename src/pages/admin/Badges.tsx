@@ -92,16 +92,50 @@ const AdminBadges: React.FC = () => {
       };
       setEvent(event);
 
-      // Load confirmed attendees
-      const registrationsQuery = query(
+      // Load attendees - try different status values
+      console.log(`🔍 Loading attendees for event: ${eventId}`);
+      
+      // First try confirmed attendees
+      let registrationsQuery = query(
         collection(db, 'registrations'),
         where('eventId', '==', eventId),
         where('status', '==', 'confirmed')
       );
 
-      const registrationsSnapshot = await getDocs(registrationsQuery);
-      const attendeesData: AttendeeData[] = [];
+      let registrationsSnapshot = await getDocs(registrationsQuery);
+      console.log(`📊 Found ${registrationsSnapshot.size} confirmed registrations`);
 
+      // If no confirmed attendees, try other common status values
+      if (registrationsSnapshot.size === 0) {
+        const alternativeStatuses = ['approved', 'registered', 'active', 'paid'];
+        
+        for (const status of alternativeStatuses) {
+          registrationsQuery = query(
+            collection(db, 'registrations'),
+            where('eventId', '==', eventId),
+            where('status', '==', status)
+          );
+          
+          registrationsSnapshot = await getDocs(registrationsQuery);
+          if (registrationsSnapshot.size > 0) {
+            console.log(`✅ Found ${registrationsSnapshot.size} registrations with status '${status}'`);
+            break;
+          }
+        }
+      }
+
+      // If still no attendees, get all registrations for this event
+      if (registrationsSnapshot.size === 0) {
+        console.log(`⚠️ No status-filtered registrations found, fetching all registrations`);
+        registrationsQuery = query(
+          collection(db, 'registrations'),
+          where('eventId', '==', eventId)
+        );
+        registrationsSnapshot = await getDocs(registrationsQuery);
+        console.log(`📋 Found ${registrationsSnapshot.size} total registrations`);
+      }
+
+      const attendeesData: AttendeeData[] = [];
       registrationsSnapshot.forEach(doc => {
         const registration = doc.data();
         attendeesData.push({
@@ -111,13 +145,13 @@ const AdminBadges: React.FC = () => {
           work: registration.work || '',
           linkedinUsername: registration.linkedinUsername || '',
           phone: registration.phone || '',
-          status: registration.status || 'confirmed',
+          status: registration.status || 'registered',
           userId: registration.userId || ''
         });
       });
 
       setAttendees(attendeesData);
-      console.log(`✅ Loaded event "${event.name}" with ${attendeesData.length} confirmed attendees`);
+      console.log(`🎫 Final loaded attendees for "${event.name}": ${attendeesData.length}`);
 
     } catch (err: any) {
       console.error('❌ Error loading event data:', err);
