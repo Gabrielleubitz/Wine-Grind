@@ -116,6 +116,22 @@ export const useAuth = () => {
         
         await retryOnNetworkFailure(async () => setDoc(userDocRef, newUserData));
         console.log('✅ Created new user profile with pending status');
+        
+        // Send admin SMS notification for pending approval
+        try {
+          await fetch('/api/send-sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: '+972584477757',
+              body: `🔔 New user pending approval: ${newUserData.name} (${newUserData.email}). Please review in admin panel.`
+            })
+          });
+          console.log('✅ Admin SMS notification sent for pending user');
+        } catch (smsError) {
+          console.error('❌ Failed to send admin SMS notification:', smsError);
+        }
+        
         return newUserData;
       } else {
         // Update existing user profile
