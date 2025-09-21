@@ -202,8 +202,8 @@ const AdminBadges: React.FC = () => {
     try {
       console.log(`🎫 Generating badges for event: ${eventId}`);
       
-      // Call the badges API
-      const response = await fetch(`/api/events/${eventId}/badges.pdf`, {
+      // Call the badges API using query parameter
+      const response = await fetch(`/api/event-badges?eventId=${eventId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',
