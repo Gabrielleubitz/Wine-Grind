@@ -29,9 +29,6 @@ module.exports = async function handler(req, res) {
     
     // Check sender domains
     const senders = await mailjet.get('sender').request();
-    
-    // Check if winengrind.com domain is verified
-    const domains = await mailjet.get('domain').request();
 
     return res.status(200).json({
       success: true,
@@ -48,12 +45,10 @@ module.exports = async function handler(req, res) {
           status: sender.Status,
           isDefaultSender: sender.IsDefaultSender
         })),
-        domains: domains.body.Data.map(domain => ({
-          domain: domain.Domain,
-          status: domain.Status,
-          spfStatus: domain.SPFStatus,
-          dkimStatus: domain.DKIMStatus
-        })),
+        apiKeys: {
+          publicKey: mailjetPublicKey?.substring(0, 8) + '...',
+          hasPrivateKey: !!mailjetPrivateKey
+        },
         timestamp: new Date().toISOString()
       }
     });
