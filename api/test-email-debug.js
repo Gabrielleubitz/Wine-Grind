@@ -29,22 +29,39 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    console.log('🔧 Debug Info:', {
+      hasPublicKey: !!mailjetPublicKey,
+      hasPrivateKey: !!mailjetPrivateKey,
+      publicKeyPrefix: mailjetPublicKey?.substring(0, 8),
+      recipient,
+      subject
+    });
+
     const mailjet = Mailjet.apiConnect(mailjetPublicKey, mailjetPrivateKey);
 
     console.log(`📧 Attempting to send email to ${recipient}`);
 
-    // Try with the Mailjet default verified sender first
-    const response = await mailjet.post('send', { version: 'v3.1' }).request({
-      Messages: [
-        {
-          From: {
-            Email: "gabriel@winengrind.com", // Try your personal email as sender
-            Name: "Wine & Grind (Gabriel)"
-          },
-          To: [{ Email: recipient }],
-          Subject: subject,
-          TextPart: message,
-          HTMLPart: `
+    // Try with multiple sender configurations to test domain verification
+    const senderOptions = [
+      { Email: "info@winengrind.com", Name: "Wine & Grind" },
+      { Email: "gabriel@winengrind.com", Name: "Gabriel - Wine & Grind" },
+      { Email: "noreply@winengrind.com", Name: "Wine & Grind" }
+    ];
+
+    let lastError = null;
+    
+    for (const sender of senderOptions) {
+      try {
+        console.log(`📤 Trying sender: ${sender.Email}`);
+        
+        const response = await mailjet.post('send', { version: 'v3.1' }).request({
+          Messages: [
+            {
+              From: sender,
+              To: [{ Email: recipient }],
+              Subject: `[DEBUG] ${subject}`,
+              TextPart: `${message}\n\n--- DEBUG INFO ---\nSender: ${sender.Email}\nTimestamp: ${new Date().toISOString()}\nTest: Domain verification check`,
+              HTMLPart: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
   <div style="text-align: center; margin-bottom: 20px;">
     <h1 style="color: #C8102E;">Wine & Grind</h1>
@@ -52,32 +69,44 @@ module.exports = async function handler(req, res) {
   
   <p>${message.replace(/\n/g, '<br>')}</p>
   
-  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center;">
-    <p>Debug test from Wine & Grind email system</p>
-    <p>Timestamp: ${new Date().toISOString()}</p>
-    <p><strong>Note:</strong> This is a test email to debug sender verification</p>
+  <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+    <h3 style="color: #333; margin: 0 0 10px 0;">🔧 DEBUG INFORMATION</h3>
+    <p style="margin: 5px 0;"><strong>Sender:</strong> ${sender.Email}</p>
+    <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+    <p style="margin: 5px 0;"><strong>Test:</strong> Domain verification check</p>
   </div>
 </div>
-          `
-        }
-      ]
-    });
+              `
+            }
+          ]
+        });
 
-    console.log('✅ Email API call succeeded:', {
-      status: response.response.status,
-      data: response.response.data
-    });
+        console.log('✅ Email sent successfully with sender:', sender.Email, {
+          status: response.response.status,
+          messageId: response.response.data?.Messages?.[0]?.Status
+        });
 
-    return res.status(200).json({ 
-      success: true,
-      message: 'Email sent successfully via debug function',
-      mailjetResponse: {
-        status: response.response.status,
-        messageId: response.response.data?.Messages?.[0]?.Status,
-        to: response.response.data?.Messages?.[0]?.To,
-        timestamp: new Date().toISOString()
+        return res.status(200).json({ 
+          success: true,
+          message: `Email sent successfully using sender: ${sender.Email}`,
+          mailjetResponse: {
+            status: response.response.status,
+            messageId: response.response.data?.Messages?.[0]?.Status,
+            to: response.response.data?.Messages?.[0]?.To,
+            from: sender.Email,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+      } catch (senderError) {
+        console.log(`❌ Failed with sender ${sender.Email}:`, senderError.message);
+        lastError = senderError;
+        continue;
       }
-    });
+    }
+
+    // If all senders failed, return the last error
+    throw lastError;
 
   } catch (error) {
     console.error('❌ Detailed Email Error:', {
@@ -95,7 +124,8 @@ module.exports = async function handler(req, res) {
       mailjetError: {
         statusCode: error.statusCode,
         errorInfo: error.ErrorInfo,
-        errorDetails: error.ErrorDetails
+        errorDetails: error.ErrorDetails,
+        responseData: error.response?.data
       },
       timestamp: new Date().toISOString()
     });
