@@ -238,9 +238,7 @@ const PendingRegistrations: React.FC = () => {
         },
         body: JSON.stringify({
           email: userToApprove.email,
-          name: userToApprove.name,
-          eventDate: 'TBD - Details will be shared soon',
-          eventLocation: 'Tel Aviv, Israel - Exact location TBD'
+          name: userToApprove.name
         })
       });
       

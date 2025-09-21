@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { email, name, eventDate, eventLocation } = req.body;
+    const { email, name } = req.body;
 
     // Validate required fields
     if (!email || !name) {
@@ -44,11 +44,7 @@ module.exports = async function handler(req, res) {
       mailjetPrivateKey
     );
 
-    console.log(`📧 Sending acceptance email to ${email}`);
-
-    // Default event details if not provided
-    const defaultEventDate = eventDate || 'TBD - You\'ll receive details soon';
-    const defaultEventLocation = eventLocation || 'Tel Aviv, Israel - Exact location will be shared';
+    console.log(`📧 Sending account approval email to ${email}`);
 
     // Send email via Mailjet
     const response = await mailjet.post('send', { version: 'v3.1' }).request({
@@ -59,90 +55,84 @@ module.exports = async function handler(req, res) {
             Name: "Wine & Grind"
           },
           To: [{ Email: email }],
-          Subject: "Welcome to Wine & Grind! Your Registration is Approved 🍷",
+          Subject: "Welcome to Wine & Grind! Your Account is Approved 🍷",
           TextPart: `
 Hi ${name},
 
-Great news! Your registration for Wine & Grind has been approved. 
+Congratulations! Your Wine & Grind account has been approved and you're now part of our exclusive community!
 
-Welcome to our community where bold ideas meet real conversations!
+🍷 WELCOME TO WINE & GRIND 🍷
 
-EVENT DETAILS:
-Date: ${defaultEventDate}
-Location: ${defaultEventLocation}
+You now have access to:
+• Exclusive networking events with founders and investors
+• Early access to event registrations
+• Member-only content and updates
+• Direct access to our community
 
-What to expect:
-• Curated networking with founders, investors, and innovators
-• Meaningful conversations over fine wine
-• Exclusive insights from industry leaders
-• A chance to shape the future through authentic connections
+WHAT'S NEXT:
+• Watch for upcoming events in your email
+• Join our Telegram community: https://t.me/winengrind
+• Visit your dashboard: https://winengrind.com
+• Follow us for updates and announcements
 
-We'll send you detailed event information, including the exact address and schedule, closer to the event date.
+We're excited to have you in our community where bold ideas meet real conversations!
 
-If you have any questions, just reply to this email.
+If you have any questions, feel free to reply to this email.
 
-Looking forward to meeting you!
+Cheers to new connections!
 
-Cheers,
-The Wine & Grind Team
+The Wine & Grind Team ✨
           `,
           HTMLPart: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h1 style="color: #C8102E;">🍷 Welcome to Wine & Grind!</h1>
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #C8102E; margin: 0;">🍷 Wine & Grind 🍷</h1>
+    <p style="font-size: 18px; color: #666; margin: 10px 0;">Where Bold Ideas Meet Real Conversations</p>
   </div>
   
-  <p>Hi ${name},</p>
-  
-  <p><strong>Great news! Your registration for Wine & Grind has been approved.</strong></p>
-  
-  <p>Welcome to our community where bold ideas meet real conversations!</p>
-  
-  <div style="background: linear-gradient(135deg, #C8102E 0%, #0070FF 100%); color: white; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: center;">
-    <h3 style="margin: 0 0 15px 0; color: white;">✅ YOUR SPOT IS CONFIRMED</h3>
+  <div style="background: linear-gradient(135deg, #C8102E 0%, #8B0000 100%); color: white; padding: 25px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+    <h2 style="margin: 0 0 10px 0;">Welcome ${name}! 🎉</h2>
+    <p style="margin: 0; font-size: 16px;">Your account has been approved!</p>
   </div>
   
-  <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-    <h3 style="color: #C8102E; margin-top: 0;">📅 Event Details</h3>
-    <table style="width: 100%;">
-      <tr>
-        <td style="padding: 8px 0; font-weight: bold; width: 80px;">Date:</td>
-        <td style="padding: 8px 0;">${defaultEventDate}</td>
-      </tr>
-      <tr>
-        <td style="padding: 8px 0; font-weight: bold;">Location:</td>
-        <td style="padding: 8px 0;">${defaultEventLocation}</td>
-      </tr>
-    </table>
-  </div>
-  
-  <h3 style="color: #C8102E;">What to expect:</h3>
-  <ul style="line-height: 1.6;">
-    <li>Curated networking with founders, investors, and innovators</li>
-    <li>Meaningful conversations over fine wine</li>
-    <li>Exclusive insights from industry leaders</li>
-    <li>A chance to shape the future through authentic connections</li>
+  <h3 style="color: #C8102E;">You Now Have Access To:</h3>
+  <ul style="line-height: 1.8;">
+    <li>🚀 Exclusive networking events with founders and investors</li>
+    <li>⚡ Early access to event registrations</li>
+    <li>📫 Member-only content and updates</li>
+    <li>💬 Direct access to our community</li>
   </ul>
   
-  <p>We'll send you detailed event information, including the exact address and schedule, closer to the event date.</p>
+  <h3 style="color: #C8102E;">What's Next:</h3>
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <p style="margin: 10px 0;">📧 <strong>Watch for upcoming events</strong> in your email</p>
+    <p style="margin: 10px 0;">💬 <strong>Join our Telegram:</strong> <a href="https://t.me/winengrind" style="color: #C8102E;">https://t.me/winengrind</a></p>
+    <p style="margin: 10px 0;">🌐 <strong>Visit your dashboard:</strong> <a href="https://winengrind.com" style="color: #C8102E;">https://winengrind.com</a></p>
+    <p style="margin: 10px 0;">👥 <strong>Follow us</strong> for updates and announcements</p>
+  </div>
   
-  <p>If you have any questions, just reply to this email.</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="https://winengrind.com" style="background-color: #C8102E; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
+      Visit Your Dashboard
+    </a>
+  </div>
   
-  <p><strong>Looking forward to meeting you!</strong></p>
+  <p style="text-align: center; color: #666; font-style: italic;">
+    We're excited to have you in our community where bold ideas meet real conversations!
+  </p>
   
-  <p>Cheers,<br>The Wine & Grind Team</p>
-  
-  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center;">
-    <p>Wine & Grind - Where Bold Ideas Meet Real Conversations</p>
-    <p>Follow us: <a href="https://winengrind.com">winengrind.com</a></p>
+  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666;">
+    <p><strong>Cheers to new connections!</strong></p>
+    <p>The Wine & Grind Team ✨</p>
   </div>
 </div>
           `
         }
-      ]
+      ],
+      SandBoxMode: false
     });
 
-    console.log('✅ Acceptance email sent successfully:', {
+    console.log('✅ Account approval email sent successfully:', {
       to: email,
       status: response.response.status,
       timestamp: new Date().toISOString()
@@ -151,11 +141,12 @@ The Wine & Grind Team
     // Return success response
     return res.status(200).json({ 
       success: true,
-      message: 'Acceptance email sent successfully'
+      message: 'Account approval email sent successfully',
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ Email Function Error:', {
+    console.error('❌ Account Approval Email Error:', {
       message: error.message,
       code: error.code,
       stack: error.stack,
