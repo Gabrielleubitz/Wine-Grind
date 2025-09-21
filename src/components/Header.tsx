@@ -233,17 +233,6 @@ const SpeakerAwareHeader: React.FC = () => {
           <nav className="hidden md:flex items-center space-x-8">
             {/* Regular Navigation Items */}
             <button 
-              onClick={handleEventsClick}
-              className={`font-medium transition-colors ${
-                location.pathname === '/events' 
-                  ? 'text-red-600' 
-                  : 'text-gray-600 hover:text-red-600'
-              }`}
-            >
-              Events
-            </button>
-            
-            <button 
               onClick={() => handleNavigation('/dashboard')}
               className={`font-medium transition-colors ${
                 location.pathname === '/dashboard' 
@@ -496,17 +485,6 @@ const SpeakerAwareHeader: React.FC = () => {
         {showMobileMenu && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="space-y-2">
-              <button 
-                onClick={handleEventsClick}
-                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  location.pathname === '/events'
-                    ? 'text-red-600 bg-red-50'
-                    : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
-                }`}
-              >
-                Events
-              </button>
-              
               <button 
                 onClick={() => handleNavigation('/dashboard')}
                 className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
