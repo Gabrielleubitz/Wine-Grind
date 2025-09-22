@@ -505,14 +505,14 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     color: rgb(...BRAND_COLORS.white),
   });
   
-  // 7. Draw role chip in bottom-right (avoiding QR code area)
+  // 7. Draw role chip in bottom-center (above QR code)
   const role = getRole(attendee);
   const roleText = formatText.roleChip(role);
   const chipWidth = roleText.length * 0.6 * TYPOGRAPHY.roleChip.normal + (2 * LAYOUT.roleChip.paddingH);
   const chipColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
   
-  // Position in bottom-right, above QR code with margin
-  const chipX = badgeWidth - mm(chipWidth + LAYOUT.roleChip.marginRight);
+  // Center horizontally on badge, position above QR code
+  const chipX = (badgeWidth - mm(chipWidth)) / 2;
   const chipY = mm(qr.tileSize + qr.margin + LAYOUT.roleChip.marginTop);
   
   // Draw rounded chip
@@ -551,9 +551,9 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     color: rgb(...BRAND_COLORS.white),
   });
   
-  // 8. Draw name (large, bold, title case)
+  // 8. Draw name (large, bold, title case) - full width since QR is centered
   const fullName = formatText.name(`${attendee.first_name} ${attendee.last_name}`.trim() || 'Guest');
-  const maxTextWidth = badge.width - (2 * badge.padding) - qr.tileSize - qr.margin;
+  const maxTextWidth = badge.width - (2 * badge.padding);
   const nameSize = fitText(fullName, mm(maxTextWidth), TYPOGRAPHY.name.max, TYPOGRAPHY.name.min);
   
   page.drawText(fullName, {
@@ -597,13 +597,13 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     });
   }
   
-  // 11. Draw QR code in bottom-right (matching preview position exactly)
+  // 11. Draw QR code in bottom-center
   if (attendee.qr_code) {
     try {
       const qrDataUrl = await generateQRCode(attendee.qr_code);
       if (qrDataUrl) {
-        // QR tile position from bottom-right corner with margin
-        const qrTileX = badgeWidth - mm(qr.tileSize + qr.margin);
+        // Center QR tile horizontally on badge
+        const qrTileX = (badgeWidth - mm(qr.tileSize)) / 2;
         const qrTileY = mm(qr.margin);
         
         // White tile background

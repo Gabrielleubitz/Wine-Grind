@@ -166,13 +166,14 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         </div>
       </div>
       
-      {/* Role chip - positioned in bottom-right above QR code */}
+      {/* Role chip - positioned in bottom-center above QR code */}
       <div 
         className={`absolute flex items-center justify-center text-white font-semibold uppercase tracking-tight ${chipFontSize}`}
         style={{
           backgroundColor: headerColor,
           bottom: `${mm(LAYOUT.qr.tileSize + LAYOUT.qr.margin + LAYOUT.roleChip.marginTop)}px`,
-          right: `${mm(LAYOUT.roleChip.marginRight)}px`,
+          left: '50%',
+          transform: 'translateX(-50%)',
           height: `${mm(LAYOUT.roleChip.height)}px`,
           borderRadius: `${mm(LAYOUT.roleChip.radius)}px`,
           paddingLeft: `${mm(LAYOUT.roleChip.paddingH)}px`,
@@ -184,13 +185,13 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         {formatText.roleChip(role)}
       </div>
       
-      {/* Content area */}
+      {/* Content area - full width since QR is now centered */}
       <div 
         className="absolute left-0 text-gray-900"
         style={{
           top: `${mm(LAYOUT.content.nameTop)}px`,
           left: `${mm(LAYOUT.badge.padding)}px`,
-          right: `${mm(LAYOUT.badge.padding + LAYOUT.qr.tileSize + LAYOUT.qr.margin)}px`,
+          right: `${mm(LAYOUT.badge.padding)}px`,
         }}
       >
         {/* Name */}
@@ -234,14 +235,15 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         )}
       </div>
       
-      {/* QR Code */}
+      {/* QR Code - centered horizontally */}
       <div 
-        className="absolute bottom-0 right-0 bg-white flex items-center justify-center"
+        className="absolute bottom-0 bg-white flex items-center justify-center"
         style={{
           width: `${mm(LAYOUT.qr.tileSize)}px`,
           height: `${mm(LAYOUT.qr.tileSize)}px`,
           marginBottom: `${mm(LAYOUT.qr.margin)}px`,
-          marginRight: `${mm(LAYOUT.qr.margin)}px`,
+          left: '50%',
+          transform: 'translateX(-50%)',
           padding: `${mm(LAYOUT.qr.padding)}px`
         }}
       >
