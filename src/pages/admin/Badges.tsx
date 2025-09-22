@@ -9,12 +9,14 @@ import {
   AlertCircle,
   CheckCircle,
   FileText,
-  Printer
+  Printer,
+  Eye
 } from 'lucide-react';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../hooks/useAuth';
 import AdminHeader from '../../components/admin/AdminHeader';
+import BadgePreview from '../../components/admin/BadgePreview';
 import Toast from '../../components/ui/Toast';
 
 interface EventData {
@@ -346,6 +348,69 @@ const AdminBadges: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Badge Preview */}
+            {attendees.length > 0 && (
+              <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-3">
+                  <Eye className="h-6 w-6 text-purple-600" />
+                  <span>Badge Preview</span>
+                </h3>
+                
+                <div className="grid lg:grid-cols-2 gap-8 items-start">
+                  <div>
+                    <p className="text-gray-600 mb-4">
+                      Preview of how badges will appear when printed. This shows the exact layout, 
+                      colors, and proportions of the PDF output.
+                    </p>
+                    
+                    <div className="bg-gray-50 rounded-xl p-6 space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: '#7A1E1E' }}></div>
+                        <span className="text-sm text-gray-600">Wine & Grind branding</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                        <span className="text-sm text-gray-600">QR Code (38×32mm)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-purple-600 rounded"></div>
+                        <span className="text-sm text-gray-600">Role-based chip</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                        <span className="text-sm text-gray-600">Event background (15% opacity)</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <BadgePreview 
+                        attendee={attendees[0]} 
+                        className="transform scale-90 origin-center"
+                      />
+                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow">
+                        Sample: {attendees[0].name}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-green-800">
+                      <p className="font-medium">Preview Matches PDF Output</p>
+                      <p className="text-sm text-green-700">
+                        This preview shows exactly how badges will appear in the generated PDF, 
+                        including role colors, text sizing, and QR code positioning.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Badge Specifications */}
             <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
