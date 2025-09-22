@@ -390,7 +390,248 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false, 
   });
 };
 
-// Draw a professional badge with exact specifications
+// Draw a single badge filling entire page (matching preview exactly)
+const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgroundImage, customOverlayOpacity, customHeaderColor) => {
+  const { badge, header, qr, content } = LAYOUT;
+  
+  // Full page dimensions
+  const badgeX = 0;
+  const badgeY = 0;
+  const badgeWidth = mm(badge.width);
+  const badgeHeight = mm(badge.height);
+  
+  // 1. Draw base background (light color)
+  page.drawRectangle({
+    x: badgeX,
+    y: badgeY,
+    width: badgeWidth,
+    height: badgeHeight,
+    color: rgb(...BRAND_COLORS.lightBg),
+  });
+  
+  // 2. Draw background image if available (maintaining aspect ratio, covering full badge)
+  if (backgroundImage) {
+    try {
+      // Calculate scaling to cover entire badge area
+      const imageAspect = backgroundImage.width / backgroundImage.height;
+      const badgeAspect = badge.width / badge.height;
+      
+      let scaledWidth, scaledHeight, offsetX, offsetY;
+      
+      if (imageAspect > badgeAspect) {
+        // Image is wider - scale to height and center horizontally  
+        scaledHeight = badgeHeight;
+        scaledWidth = scaledHeight * imageAspect;
+        offsetX = (badgeWidth - scaledWidth) / 2;
+        offsetY = 0;
+      } else {
+        // Image is taller - scale to width and center vertically
+        scaledWidth = badgeWidth;
+        scaledHeight = scaledWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (badgeHeight - scaledHeight) / 2;
+      }
+      
+      page.drawImage(backgroundImage, {
+        x: badgeX + offsetX,
+        y: badgeY + offsetY,
+        width: scaledWidth,
+        height: scaledHeight,
+        opacity: 0.15,
+      });
+    } catch (error) {
+      console.log('⚠️ Background image failed:', error.message);
+    }
+  }
+  
+  // 3. Draw dark overlay for contrast
+  page.drawRectangle({
+    x: badgeX,
+    y: badgeY,
+    width: badgeWidth,
+    height: badgeHeight,
+    color: rgb(...BRAND_COLORS.black),
+    opacity: (customOverlayOpacity || 25) / 100,
+  });
+  
+  // 4. Draw header band
+  const headerColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
+  page.drawRectangle({
+    x: badgeX,
+    y: badgeY + badgeHeight - mm(header.height),
+    width: badgeWidth,
+    height: mm(header.height),
+    color: rgb(...headerColorRgb),
+  });
+  
+  // 5. Draw logo in header
+  if (logoImage) {
+    try {
+      const maxLogoWidth = mm(header.logoWidth);
+      const maxLogoHeight = mm(header.logoHeight);
+      
+      const logoAspect = logoImage.width / logoImage.height;
+      const maxAspect = header.logoWidth / header.logoHeight;
+      
+      let logoWidth, logoHeight;
+      if (logoAspect > maxAspect) {
+        logoWidth = maxLogoWidth;
+        logoHeight = maxLogoWidth / logoAspect;
+      } else {
+        logoHeight = maxLogoHeight;
+        logoWidth = maxLogoHeight * logoAspect;
+      }
+      
+      const logoY = badgeY + badgeHeight - mm(header.height) + (mm(header.height) - logoHeight) / 2;
+      
+      page.drawImage(logoImage, {
+        x: badgeX + mm(badge.padding),
+        y: logoY,
+        width: logoWidth,
+        height: logoHeight,
+      });
+    } catch (error) {
+      console.log('⚠️ Logo failed:', error.message);
+    }
+  }
+  
+  // 6. Draw "WINE & GRIND" text
+  const logoOffset = logoImage ? header.logoWidth + 2 : 0;
+  page.drawText('WINE & GRIND', {
+    x: badgeX + mm(badge.padding + logoOffset),
+    y: badgeY + badgeHeight - mm(header.height) + mm(header.height) / 2 - TYPOGRAPHY.header.size / 4,
+    size: TYPOGRAPHY.header.size,
+    font: boldFont,
+    color: rgb(...BRAND_COLORS.white),
+  });
+  
+  // 7. Draw role chip in top-right (matching preview position exactly)
+  const role = getRole(attendee);
+  const roleText = formatText.roleChip(role);
+  const chipWidth = roleText.length * 0.6 * TYPOGRAPHY.roleChip.normal + (2 * LAYOUT.roleChip.paddingH);
+  const chipColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
+  
+  const chipX = badgeWidth - mm(chipWidth + LAYOUT.roleChip.marginRight);
+  const chipY = badgeHeight - mm(LAYOUT.header.height + LAYOUT.roleChip.marginTop + LAYOUT.roleChip.height);
+  
+  // Draw rounded chip
+  const radius = mm(LAYOUT.roleChip.radius);
+  const chipHeightMm = mm(LAYOUT.roleChip.height);
+  const chipWidthMm = mm(chipWidth);
+  
+  page.drawRectangle({
+    x: chipX + radius,
+    y: chipY,
+    width: chipWidthMm - (2 * radius),
+    height: chipHeightMm,
+    color: rgb(...chipColorRgb),
+  });
+  page.drawRectangle({
+    x: chipX,
+    y: chipY,
+    width: radius,
+    height: chipHeightMm,
+    color: rgb(...chipColorRgb),
+  });
+  page.drawRectangle({
+    x: chipX + chipWidthMm - radius,
+    y: chipY,
+    width: radius,
+    height: chipHeightMm,
+    color: rgb(...chipColorRgb),
+  });
+  
+  // Draw chip text
+  page.drawText(roleText, {
+    x: chipX + mm(LAYOUT.roleChip.paddingH),
+    y: chipY + chipHeightMm / 2 - TYPOGRAPHY.roleChip.normal / 4,
+    size: TYPOGRAPHY.roleChip.normal,
+    font: font,
+    color: rgb(...BRAND_COLORS.white),
+  });
+  
+  // 8. Draw name (large, bold, title case)
+  const fullName = formatText.name(`${attendee.first_name} ${attendee.last_name}`.trim() || 'Guest');
+  const maxTextWidth = badge.width - (2 * badge.padding) - qr.tileSize - qr.margin;
+  const nameSize = fitText(fullName, mm(maxTextWidth), TYPOGRAPHY.name.max, TYPOGRAPHY.name.min);
+  
+  page.drawText(fullName, {
+    x: badgeX + mm(badge.padding),
+    y: badgeY + badgeHeight - mm(content.nameTop),
+    size: nameSize,
+    font: boldFont,
+    color: rgb(...BRAND_COLORS.charcoal),
+  });
+  
+  // 9. Draw company
+  let currentY = badgeHeight - content.nameTop - (nameSize * 0.6) - content.companyGap;
+  if (attendee.company && attendee.company.trim()) {
+    const companyText = formatText.company(attendee.company.trim());
+    
+    page.drawText(companyText, {
+      x: badgeX + mm(badge.padding),
+      y: badgeY + mm(currentY),
+      size: TYPOGRAPHY.company.size,
+      font: font,
+      color: rgb(...BRAND_COLORS.charcoal),
+    });
+    
+    currentY -= TYPOGRAPHY.company.size * 0.4 + content.linkedinGap;
+  }
+  
+  // 10. Draw LinkedIn
+  if (attendee.linkedin && attendee.linkedin.trim()) {
+    let linkedinText = attendee.linkedin.trim();
+    if (linkedinText.startsWith('http')) {
+      linkedinText = linkedinText.replace(/https?:\/\/(www\.)?linkedin\.com\/(in\/)?/, '');
+    }
+    linkedinText = `linkedin.com/in/${linkedinText}`;
+    
+    page.drawText(linkedinText, {
+      x: badgeX + mm(badge.padding),
+      y: badgeY + mm(currentY),
+      size: TYPOGRAPHY.linkedin.size,
+      font: font,
+      color: rgb(...BRAND_COLORS.mutedText),
+    });
+  }
+  
+  // 11. Draw QR code in bottom-right
+  if (attendee.qr_code) {
+    try {
+      const qrDataUrl = await generateQRCode(attendee.qr_code);
+      if (qrDataUrl) {
+        // QR tile position
+        const qrTileX = badgeWidth - mm(qr.tileSize + qr.margin);
+        const qrTileY = badgeY + mm(qr.margin);
+        
+        // White tile background
+        page.drawRectangle({
+          x: qrTileX,
+          y: qrTileY,
+          width: mm(qr.tileSize),
+          height: mm(qr.tileSize),
+          color: rgb(...BRAND_COLORS.white),
+        });
+        
+        // QR code
+        const qrBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+        const qrImage = await page.doc.embedPng(qrBuffer);
+        
+        page.drawImage(qrImage, {
+          x: qrTileX + mm(qr.padding),
+          y: qrTileY + mm(qr.padding),
+          width: mm(qr.codeSize),
+          height: mm(qr.codeSize),
+        });
+      }
+    } catch (error) {
+      console.error('⚠️ QR code failed:', error.message);
+    }
+  }
+};
+
+// Legacy multi-badge function (kept for reference)
 const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgroundImage, customOverlayOpacity, customHeaderColor) => {
   const { badge, header, qr, content, background } = LAYOUT;
   const pageHeight = LAYOUT.page.height;
@@ -808,32 +1049,22 @@ module.exports = async function handler(req, res) {
       }
     }
     
-    // Calculate pages needed (4 badges per page in 2x2 grid)
-    const badgesPerPage = 4;
-    const totalPages = Math.ceil(attendees.length / badgesPerPage);
-    const badgePositions = getBadgePositions(); // Use exact positions
+    // Generate one badge per page for perfect template matching
+    const totalPages = attendees.length;
     
-    console.log(`📄 Generating ${totalPages} pages for ${attendees.length} attendees`);
-    console.log(`📍 Badge positions:`, badgePositions);
+    console.log(`📄 Generating ${totalPages} pages (1 badge per page) for ${attendees.length} attendees`);
     
-    // Generate pages
-    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-      const page = pdfDoc.addPage([mm(LAYOUT.page.width), mm(LAYOUT.page.height)]);
+    // Generate pages - one badge per page
+    for (let pageIndex = 0; pageIndex < attendees.length; pageIndex++) {
+      const attendee = attendees[pageIndex];
       
-      const startIndex = pageIndex * badgesPerPage;
-      const pageAttendees = attendees.slice(startIndex, startIndex + badgesPerPage);
+      // Create page with badge dimensions (90 × 133.5 mm)
+      const page = pdfDoc.addPage([mm(LAYOUT.badge.width), mm(LAYOUT.badge.height)]);
       
-      console.log(`📄 Page ${pageIndex + 1}: ${pageAttendees.length} badges`);
+      console.log(`📄 Page ${pageIndex + 1}: Badge for ${attendee.first_name} ${attendee.last_name}`);
       
-      // Draw badges for this page using exact positions
-      for (let i = 0; i < pageAttendees.length; i++) {
-        const attendee = pageAttendees[i];
-        const position = badgePositions[i];
-        
-        console.log(`🎫 Drawing badge for ${attendee.first_name} ${attendee.last_name} at (${position.x}, ${position.y})`);
-        
-        await drawBadge(page, attendee, position.x, position.y, font, boldFont, logoImage, backgroundImage, overlayOpacity, headerColor);
-      }
+      // Draw badge at origin (0,0) - full page
+      await drawSingleBadge(page, attendee, 0, 0, font, boldFont, logoImage, backgroundImage, overlayOpacity, headerColor);
     }
     
     // Generate PDF
