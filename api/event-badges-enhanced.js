@@ -340,10 +340,11 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false, 
   const textWidth = roleText.length * 0.6 * chipFontSize; // Estimated width
   const chipWidth = textWidth + (2 * LAYOUT.roleChip.paddingH);
   
-  // Position chip in top-right corner (matching preview positioning)
+  // Position chip in top-right corner (matching preview positioning exactly)
   const chipX = badgeX + mm(LAYOUT.badge.width - chipWidth - LAYOUT.roleChip.marginRight);
-  // Position from top of badge: header height + margin top (matching preview exactly)
-  const chipY = badgeY + mm(LAYOUT.badge.height - (LAYOUT.header.height + LAYOUT.roleChip.marginTop + LAYOUT.roleChip.height));
+  // Position from TOP of badge: header height + margin top (same as preview)
+  const chipTopOffset = LAYOUT.header.height + LAYOUT.roleChip.marginTop;
+  const chipY = badgeY + mm(LAYOUT.badge.height - chipTopOffset - LAYOUT.roleChip.height);
   
   // Draw chip background with custom header color (rounded rectangle using multiple shapes)
   const radius = mm(LAYOUT.roleChip.radius);
@@ -398,27 +399,39 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
   const badgeX = mm(x);
   const badgeY = mm(pageHeight - y - badge.height);
   
-  // 1. Draw background image maintaining aspect ratio
+  // 1. Draw background with proper clipping and overlay
+  const badgeWidthPt = mm(badge.width);
+  const badgeHeightPt = mm(badge.height);
+  
+  // First, ensure we have a base background
+  page.drawRectangle({
+    x: badgeX,
+    y: badgeY,
+    width: badgeWidthPt,
+    height: badgeHeightPt,
+    color: rgb(...BRAND_COLORS.lightBg),
+  });
+  
+  // Then draw background image if available, constrained to badge area
   if (backgroundImage) {
     try {
       // Get image dimensions
       const imageWidth = backgroundImage.width;
       const imageHeight = backgroundImage.height;
-      const badgeWidthPt = mm(badge.width);
-      const badgeHeightPt = mm(badge.height);
       
-      // Calculate scaling to fill badge area (maintaining aspect ratio)
+      // Calculate scaling to exactly fit badge area (maintaining aspect ratio)
       const scaleX = badgeWidthPt / imageWidth;
       const scaleY = badgeHeightPt / imageHeight;
-      const scale = Math.max(scaleX, scaleY); // Use larger scale to fill
+      const scale = Math.min(scaleX, scaleY); // Use smaller scale to fit within bounds
       
       const scaledWidth = imageWidth * scale;
       const scaledHeight = imageHeight * scale;
       
-      // Center the image
+      // Center the image within badge bounds
       const offsetX = (badgeWidthPt - scaledWidth) / 2;
       const offsetY = (badgeHeightPt - scaledHeight) / 2;
       
+      // Draw background image (guaranteed to fit within badge bounds)
       page.drawImage(backgroundImage, {
         x: badgeX + offsetX,
         y: badgeY + offsetY,
@@ -427,37 +440,20 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
         opacity: 0.15, // 15% as specified
       });
       
-      // Add dark overlay for contrast with custom opacity
-      page.drawRectangle({
-        x: badgeX,
-        y: badgeY,
-        width: mm(badge.width),
-        height: mm(badge.height),
-        color: rgb(...BRAND_COLORS.black),
-        opacity: (customOverlayOpacity || 25) / 100, // Use custom overlay opacity
-      });
     } catch (error) {
-      console.log('⚠️ Background image render failed, using solid light background');
-      
-      // Fallback to light background
-      page.drawRectangle({
-        x: badgeX,
-        y: badgeY,
-        width: mm(badge.width),
-        height: mm(badge.height),
-        color: rgb(...BRAND_COLORS.lightBg),
-      });
+      console.log('⚠️ Background image render failed:', error.message);
     }
-  } else {
-    // Default light background if no event hero image
-    page.drawRectangle({
-      x: badgeX,
-      y: badgeY,
-      width: mm(badge.width),
-      height: mm(badge.height),
-      color: rgb(...BRAND_COLORS.lightBg),
-    });
   }
+  
+  // Always add overlay to entire badge area (regardless of background image success)
+  page.drawRectangle({
+    x: badgeX,
+    y: badgeY,
+    width: badgeWidthPt,
+    height: badgeHeightPt,
+    color: rgb(...BRAND_COLORS.black),
+    opacity: (customOverlayOpacity || 25) / 100, // Use custom overlay opacity
+  });
   
   // 2. Draw header band with custom color (13mm height)
   const headerColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
