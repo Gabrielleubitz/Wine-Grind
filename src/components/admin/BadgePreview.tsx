@@ -166,12 +166,12 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         </div>
       </div>
       
-      {/* Role chip */}
+      {/* Role chip - positioned in bottom-right above QR code */}
       <div 
         className={`absolute flex items-center justify-center text-white font-semibold uppercase tracking-tight ${chipFontSize}`}
         style={{
           backgroundColor: headerColor,
-          top: `${mm(LAYOUT.header.height + LAYOUT.roleChip.marginTop)}px`,
+          bottom: `${mm(LAYOUT.qr.tileSize + LAYOUT.qr.margin + LAYOUT.roleChip.marginTop)}px`,
           right: `${mm(LAYOUT.roleChip.marginRight)}px`,
           height: `${mm(LAYOUT.roleChip.height)}px`,
           borderRadius: `${mm(LAYOUT.roleChip.radius)}px`,

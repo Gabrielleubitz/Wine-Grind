@@ -505,15 +505,15 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     color: rgb(...BRAND_COLORS.white),
   });
   
-  // 7. Draw role chip in top-right (matching preview position exactly)
+  // 7. Draw role chip in bottom-right (avoiding QR code area)
   const role = getRole(attendee);
   const roleText = formatText.roleChip(role);
   const chipWidth = roleText.length * 0.6 * TYPOGRAPHY.roleChip.normal + (2 * LAYOUT.roleChip.paddingH);
   const chipColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
   
+  // Position in bottom-right, above QR code with margin
   const chipX = badgeWidth - mm(chipWidth + LAYOUT.roleChip.marginRight);
-  // Position from TOP like in preview: header.height + marginTop
-  const chipY = badgeHeight - mm(LAYOUT.header.height + LAYOUT.roleChip.marginTop + LAYOUT.roleChip.height);
+  const chipY = mm(qr.tileSize + qr.margin + LAYOUT.roleChip.marginTop);
   
   // Draw rounded chip
   const radius = mm(LAYOUT.roleChip.radius);
