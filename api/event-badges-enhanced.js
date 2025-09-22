@@ -340,9 +340,10 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false, 
   const textWidth = roleText.length * 0.6 * chipFontSize; // Estimated width
   const chipWidth = textWidth + (2 * LAYOUT.roleChip.paddingH);
   
-  // Position chip in top-right, avoiding QR and header logo
+  // Position chip in top-right corner (matching preview positioning)
   const chipX = badgeX + mm(LAYOUT.badge.width - chipWidth - LAYOUT.roleChip.marginRight);
-  const chipY = badgeY + mm(LAYOUT.badge.height - LAYOUT.header.height - LAYOUT.roleChip.height - LAYOUT.roleChip.marginTop);
+  // Position from top of badge: header height + margin top (matching preview exactly)
+  const chipY = badgeY + mm(LAYOUT.badge.height - (LAYOUT.header.height + LAYOUT.roleChip.marginTop + LAYOUT.roleChip.height));
   
   // Draw chip background with custom header color (rounded rectangle using multiple shapes)
   const radius = mm(LAYOUT.roleChip.radius);
@@ -397,15 +398,33 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
   const badgeX = mm(x);
   const badgeY = mm(pageHeight - y - badge.height);
   
-  // 1. Draw background image at 12-18% opacity with dark overlay for contrast
+  // 1. Draw background image maintaining aspect ratio
   if (backgroundImage) {
     try {
+      // Get image dimensions
+      const imageWidth = backgroundImage.width;
+      const imageHeight = backgroundImage.height;
+      const badgeWidthPt = mm(badge.width);
+      const badgeHeightPt = mm(badge.height);
+      
+      // Calculate scaling to fill badge area (maintaining aspect ratio)
+      const scaleX = badgeWidthPt / imageWidth;
+      const scaleY = badgeHeightPt / imageHeight;
+      const scale = Math.max(scaleX, scaleY); // Use larger scale to fill
+      
+      const scaledWidth = imageWidth * scale;
+      const scaledHeight = imageHeight * scale;
+      
+      // Center the image
+      const offsetX = (badgeWidthPt - scaledWidth) / 2;
+      const offsetY = (badgeHeightPt - scaledHeight) / 2;
+      
       page.drawImage(backgroundImage, {
-        x: badgeX,
-        y: badgeY,
-        width: mm(badge.width),
-        height: mm(badge.height),
-        opacity: background.opacity, // 15% as specified
+        x: badgeX + offsetX,
+        y: badgeY + offsetY,
+        width: scaledWidth,
+        height: scaledHeight,
+        opacity: 0.15, // 15% as specified
       });
       
       // Add dark overlay for contrast with custom opacity
@@ -450,24 +469,64 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
     color: rgb(...headerColorRgb),
   });
   
-  // 3. Draw logo in header (white logo for dark header)
+  // 3. Draw logo in header (maintaining aspect ratio)
   if (logoImage) {
     try {
+      // Calculate logo scaling to fit within specified dimensions
+      const maxLogoWidth = mm(header.logoWidth);
+      const maxLogoHeight = mm(header.logoHeight);
+      
+      const logoAspectRatio = logoImage.width / logoImage.height;
+      const maxAspectRatio = header.logoWidth / header.logoHeight;
+      
+      let logoWidth, logoHeight;
+      if (logoAspectRatio > maxAspectRatio) {
+        // Logo is wider relative to max dimensions
+        logoWidth = maxLogoWidth;
+        logoHeight = maxLogoWidth / logoAspectRatio;
+      } else {
+        // Logo is taller relative to max dimensions
+        logoHeight = maxLogoHeight;
+        logoWidth = maxLogoHeight * logoAspectRatio;
+      }
+      
+      // Center logo vertically in header
+      const logoY = badgeY + mm(badge.height - header.height) + (mm(header.height) - logoHeight) / 2;
+      
       page.drawImage(logoImage, {
         x: badgeX + mm(badge.padding),
-        y: badgeY + mm(badge.height - header.height + header.textOffset),
-        height: mm(header.logoHeight),
-        width: mm(header.logoWidth),
+        y: logoY,
+        width: logoWidth,
+        height: logoHeight,
       });
     } catch (error) {
-      console.log('⚠️ Logo render failed');
+      console.log('⚠️ Logo render failed:', error.message);
+      
+      // Draw fallback placeholder
+      page.drawText('W&G', {
+        x: badgeX + mm(badge.padding),
+        y: badgeY + mm(badge.height - header.height + header.textOffset + 2),
+        size: 12,
+        font: boldFont,
+        color: rgb(...BRAND_COLORS.white),
+      });
     }
+  } else {
+    // Draw fallback placeholder when no logo provided
+    page.drawText('W&G', {
+      x: badgeX + mm(badge.padding),
+      y: badgeY + mm(badge.height - header.height + header.textOffset + 2),
+      size: 12,
+      font: boldFont,
+      color: rgb(...BRAND_COLORS.white),
+    });
   }
   
   // 4. Draw "WINE & GRIND" text in header
+  const logoTextOffset = logoImage ? header.logoWidth + 2 : 0;
   page.drawText('WINE & GRIND', {
-    x: badgeX + mm(badge.padding + (logoImage ? header.logoWidth + 2 : 0)),
-    y: badgeY + mm(badge.height - header.height + header.textOffset + 2),
+    x: badgeX + mm(badge.padding + logoTextOffset),
+    y: badgeY + mm(badge.height - header.height) + mm(header.height) / 2 - TYPOGRAPHY.header.size / 2,
     size: TYPOGRAPHY.header.size,
     font: boldFont,
     color: rgb(...BRAND_COLORS.white),
@@ -537,7 +596,7 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
     try {
       const qrDataUrl = await generateQRCode(attendee.qr_code);
       if (qrDataUrl) {
-        // QR tile position (bottom-right)
+        // QR tile position (bottom-right corner)
         const qrTileX = badgeX + mm(badge.width - qr.tileSize - qr.margin);
         const qrTileY = badgeY + mm(qr.margin);
         
