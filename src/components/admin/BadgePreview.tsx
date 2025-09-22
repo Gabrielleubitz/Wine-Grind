@@ -175,7 +175,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
           left: '50%',
           transform: 'translateX(-50%)',
           height: `${mm(LAYOUT.roleChip.height)}px`,
-          borderRadius: `${mm(LAYOUT.roleChip.radius)}px`,
+          borderRadius: `${mm(LAYOUT.roleChip.height) / 2}px`, // Pill shape - height/2 radius
           paddingLeft: `${mm(LAYOUT.roleChip.paddingH)}px`,
           paddingRight: `${mm(LAYOUT.roleChip.paddingH)}px`,
           letterSpacing: TYPOGRAPHY.letterSpacing.tight + 'em',
@@ -263,7 +263,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
       <div 
         className="absolute text-center"
         style={{
-          bottom: `${mm(LAYOUT.qr.margin) + mm(LAYOUT.qr.tileSize) + 3}px`, // 3px above QR tile
+          bottom: `${mm(LAYOUT.qr.margin) - 3}px`, // 3px below QR tile (closer to bottom edge)
           left: '50%',
           transform: 'translateX(-50%)',
           fontSize: '10px',
