@@ -56,6 +56,10 @@ const AdminBadges: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [overlayOpacity, setOverlayOpacity] = useState(25); // 25% default
+  const [headerColor, setHeaderColor] = useState('#7A1E1E'); // Wine color default
   const [toast, setToast] = useState<ToastState>({
     visible: false,
     message: '',
@@ -140,13 +144,32 @@ const AdminBadges: React.FC = () => {
   const handleGenerateBadges = async () => {
     if (!eventId || attendees.length === 0) return;
 
+    // Validate required URLs
+    if (!backgroundImageUrl.trim()) {
+      showToast('Background image URL is required', 'error');
+      return;
+    }
+    
+    if (!logoUrl.trim()) {
+      showToast('Logo URL is required', 'error');
+      return;
+    }
+
     setGenerating(true);
     
     try {
       console.log(`🎫 Generating badges for event: ${eventId}`);
       
-      // Call the enhanced badges API using query parameter
-      const response = await fetch(`/api/event-badges-enhanced?eventId=${eventId}`, {
+      // Call the enhanced badges API with custom URLs and styling
+      const params = new URLSearchParams({
+        eventId,
+        backgroundImageUrl: backgroundImageUrl.trim(),
+        logoUrl: logoUrl.trim(),
+        overlayOpacity: overlayOpacity.toString(),
+        headerColor: headerColor
+      });
+      
+      const response = await fetch(`/api/event-badges-enhanced?${params}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',
@@ -307,14 +330,116 @@ const AdminBadges: React.FC = () => {
                 </div>
               )}
 
-              {/* Badge Generation Section */}
-              <div className="border-t border-gray-200 pt-6">
+              {/* Badge Configuration */}
+              <div className="border-t border-gray-200 pt-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Badge Configuration</h3>
+                  <p className="text-gray-600 mb-6">
+                    Configure badge assets and generate professional lanyard badges for all confirmed attendees.
+                  </p>
+                  
+                  {/* URL Configuration Fields */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label htmlFor="backgroundUrl" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Background Image URL *
+                      </label>
+                      <input
+                        type="url"
+                        id="backgroundUrl"
+                        placeholder="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200"
+                        value={backgroundImageUrl}
+                        onChange={(e) => setBackgroundImageUrl(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Event background image (JPEG/PNG, will appear at 15% opacity)
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="logoUrl" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Logo URL *
+                      </label>
+                      <input
+                        type="url"
+                        id="logoUrl"
+                        placeholder="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/react.svg"
+                        value={logoUrl}
+                        onChange={(e) => setLogoUrl(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Logo for badge header (SVG/PNG, will appear white on dark header)
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Styling Controls */}
+                  <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
+                    <div>
+                      <label htmlFor="overlayOpacity" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Background Overlay Darkness
+                      </label>
+                      <div className="space-y-2">
+                        <input
+                          type="range"
+                          id="overlayOpacity"
+                          min="0"
+                          max="80"
+                          step="5"
+                          value={overlayOpacity}
+                          onChange={(e) => setOverlayOpacity(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Light (0%)</span>
+                          <span className="font-medium">{overlayOpacity}%</span>
+                          <span>Dark (80%)</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Controls dark overlay opacity over background image
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="headerColor" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Header Color
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="color"
+                          id="headerColor"
+                          value={headerColor}
+                          onChange={(e) => setHeaderColor(e.target.value)}
+                          className="w-16 h-12 rounded-lg border-2 border-gray-300 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={headerColor}
+                            onChange={(e) => setHeaderColor(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-mono"
+                            placeholder="#7A1E1E"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Color for badge header band and role chip backgrounds
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Badge Generation Section */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Badge Generation</h3>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Generate Badges</h4>
                     <p className="text-gray-600">
-                      Generate professional lanyard badges for all confirmed attendees. 
-                      Each badge includes name, company, LinkedIn, and QR code.
+                      Each badge includes name, company, LinkedIn, role chip, and QR code.
                     </p>
                   </div>
                   
@@ -322,13 +447,22 @@ const AdminBadges: React.FC = () => {
                     {attendees.length > 0 ? (
                       <button
                         onClick={handleGenerateBadges}
-                        disabled={generating}
-                        className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-8 py-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold text-lg flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={generating || !backgroundImageUrl.trim() || !logoUrl.trim()}
+                        className={`px-8 py-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold text-lg flex items-center space-x-3 disabled:cursor-not-allowed ${
+                          !backgroundImageUrl.trim() || !logoUrl.trim() 
+                            ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                            : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white disabled:opacity-50'
+                        }`}
                       >
                         {generating ? (
                           <>
                             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             <span>Generating...</span>
+                          </>
+                        ) : !backgroundImageUrl.trim() || !logoUrl.trim() ? (
+                          <>
+                            <AlertCircle className="h-6 w-6" />
+                            <span>Configure URLs First</span>
                           </>
                         ) : (
                           <>
@@ -366,33 +500,56 @@ const AdminBadges: React.FC = () => {
                     
                     <div className="bg-gray-50 rounded-xl p-6 space-y-3">
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: '#7A1E1E' }}></div>
-                        <span className="text-sm text-gray-600">Wine & Grind branding</span>
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: headerColor }}></div>
+                        <span className="text-sm text-gray-600">Custom header color</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
                         <span className="text-sm text-gray-600">QR Code (38×32mm)</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-purple-600 rounded"></div>
-                        <span className="text-sm text-gray-600">Role-based chip</span>
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: headerColor }}></div>
+                        <span className="text-sm text-gray-600">Role chip (matches header)</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                        <span className="text-sm text-gray-600">Event background (15% opacity)</span>
+                        <div 
+                          className="w-4 h-4 bg-gray-200 rounded relative overflow-hidden"
+                        >
+                          <div 
+                            className="absolute inset-0 bg-black"
+                            style={{ opacity: overlayOpacity / 100 }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-gray-600">Background + {overlayOpacity}% overlay</span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex justify-center">
                     <div className="relative">
-                      <BadgePreview 
-                        attendee={attendees[0]} 
-                        className="transform scale-90 origin-center"
-                      />
-                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow">
-                        Sample: {attendees[0].name}
-                      </div>
+                      {backgroundImageUrl && logoUrl ? (
+                        <>
+                          <BadgePreview 
+                            attendee={attendees[0]} 
+                            className="transform scale-90 origin-center"
+                            backgroundImageUrl={backgroundImageUrl}
+                            logoUrl={logoUrl}
+                            overlayOpacity={overlayOpacity}
+                            headerColor={headerColor}
+                          />
+                          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow">
+                            Sample: {attendees[0].name}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-80 h-96 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-500">
+                          <AlertCircle className="h-12 w-12 mb-2" />
+                          <p className="text-sm font-medium">Badge Preview</p>
+                          <p className="text-xs text-center px-4">
+                            Configure background and logo URLs to see preview
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

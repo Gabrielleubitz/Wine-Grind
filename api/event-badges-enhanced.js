@@ -100,6 +100,19 @@ const PRINT_SPECS = {
 // Convert millimeters to points
 const mm = (millimeters) => millimeters * PRINT_SPECS.mmToPoints;
 
+// Convert hex color to RGB array for pdf-lib
+const hexToRgb = (hex) => {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse hex values
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  
+  return [r, g, b];
+};
+
 // Cache for loaded assets
 let assetCache = {
   logo: null,
@@ -196,6 +209,27 @@ const generateQRCode = async (data) => {
   } catch (error) {
     console.error('❌ Error generating QR code:', error);
     return null;
+  }
+};
+
+// Load image from URL
+const loadImageFromUrl = async (url) => {
+  try {
+    console.log(`🔄 Loading image from URL: ${url}`);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    console.log(`✅ Image loaded successfully: ${buffer.length} bytes`);
+    return buffer;
+  } catch (error) {
+    console.error(`❌ Error loading image from URL: ${url}`, error);
+    throw error;
   }
 };
 
@@ -297,7 +331,7 @@ const drawCropMarks = (page, badgeX, badgeY) => {
 };
 
 // Draw role chip with proper positioning
-const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) => {
+const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false, customHeaderColor) => {
   const role = getRole(attendee);
   const roleText = formatText.roleChip(role);
   const chipFontSize = isLongName ? TYPOGRAPHY.roleChip.reduced : TYPOGRAPHY.roleChip.normal;
@@ -310,10 +344,11 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) 
   const chipX = badgeX + mm(LAYOUT.badge.width - chipWidth - LAYOUT.roleChip.marginRight);
   const chipY = badgeY + mm(LAYOUT.badge.height - LAYOUT.header.height - LAYOUT.roleChip.height - LAYOUT.roleChip.marginTop);
   
-  // Draw chip background with role color (rounded rectangle using multiple shapes)
+  // Draw chip background with custom header color (rounded rectangle using multiple shapes)
   const radius = mm(LAYOUT.roleChip.radius);
   const chipHeight = mm(LAYOUT.roleChip.height);
   const chipWidthMm = mm(chipWidth);
+  const chipColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
   
   // Main rectangle body
   page.drawRectangle({
@@ -321,7 +356,7 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) 
     y: chipY,
     width: chipWidthMm - (2 * radius),
     height: chipHeight,
-    color: rgb(...BRAND_COLORS.roles[role]),
+    color: rgb(...chipColorRgb),
   });
   
   // Left cap
@@ -330,7 +365,7 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) 
     y: chipY,
     width: radius,
     height: chipHeight,
-    color: rgb(...BRAND_COLORS.roles[role]),
+    color: rgb(...chipColorRgb),
   });
   
   // Right cap  
@@ -339,7 +374,7 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) 
     y: chipY,
     width: radius,
     height: chipHeight,
-    color: rgb(...BRAND_COLORS.roles[role]),
+    color: rgb(...chipColorRgb),
   });
   
   // Draw chip text
@@ -354,7 +389,7 @@ const drawRoleChip = (page, attendee, badgeX, badgeY, font, isLongName = false) 
 };
 
 // Draw a professional badge with exact specifications
-const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgroundImage) => {
+const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgroundImage, customOverlayOpacity, customHeaderColor) => {
   const { badge, header, qr, content, background } = LAYOUT;
   const pageHeight = LAYOUT.page.height;
   
@@ -373,14 +408,14 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
         opacity: background.opacity, // 15% as specified
       });
       
-      // Add dark overlay for contrast as specified
+      // Add dark overlay for contrast with custom opacity
       page.drawRectangle({
         x: badgeX,
         y: badgeY,
         width: mm(badge.width),
         height: mm(badge.height),
         color: rgb(...BRAND_COLORS.black),
-        opacity: background.overlayOpacity, // 25% dark overlay
+        opacity: (customOverlayOpacity || 25) / 100, // Use custom overlay opacity
       });
     } catch (error) {
       console.log('⚠️ Background image render failed, using solid light background');
@@ -405,13 +440,14 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
     });
   }
   
-  // 2. Draw header band (Wine color, 13mm height)
+  // 2. Draw header band with custom color (13mm height)
+  const headerColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
   page.drawRectangle({
     x: badgeX,
     y: badgeY + mm(badge.height - header.height),
     width: mm(badge.width),
     height: mm(header.height),
-    color: rgb(...BRAND_COLORS.wine),
+    color: rgb(...headerColorRgb),
   });
   
   // 3. Draw logo in header (white logo for dark header)
@@ -494,7 +530,7 @@ const drawBadge = async (page, attendee, x, y, font, boldFont, logoImage, backgr
   }
   
   // 9. Draw role chip (positioned to avoid overlaps)
-  drawRoleChip(page, attendee, badgeX, badgeY, font, isLongName);
+  drawRoleChip(page, attendee, badgeX, badgeY, font, isLongName, customHeaderColor);
   
   // 10. Draw QR code with white tile background (38mm tile, 32mm QR)
   if (attendee.qr_code) {
@@ -622,7 +658,7 @@ module.exports = async function handler(req, res) {
   }
   
   try {
-    const { eventId } = req.query;
+    const { eventId, backgroundImageUrl, logoUrl, overlayOpacity, headerColor } = req.query;
     
     if (!eventId) {
       return res.status(400).json({
@@ -631,14 +667,25 @@ module.exports = async function handler(req, res) {
       });
     }
     
+    if (!backgroundImageUrl || !logoUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing backgroundImageUrl or logoUrl parameters'
+      });
+    }
+    
     console.log(`🎫 Starting enhanced badge generation for event: ${eventId}`);
+    console.log(`🖼️ Background URL: ${backgroundImageUrl}`);
+    console.log(`🏷️ Logo URL: ${logoUrl}`);
+    console.log(`🎨 Overlay Opacity: ${overlayOpacity}%`);
+    console.log(`🎨 Header Color: ${headerColor}`);
     
     // Load assets and data in parallel
     const [event, attendees, logoData, backgroundData] = await Promise.all([
       getEventDetails(eventId),
       getEventAttendees(eventId),
-      loadLogo(),
-      loadBackground(),
+      loadImageFromUrl(logoUrl),
+      loadImageFromUrl(backgroundImageUrl),
     ]);
     
     if (!event) {
@@ -660,28 +707,49 @@ module.exports = async function handler(req, res) {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     
-    // Embed assets
+    // Embed assets with better format detection
     let logoImage = null;
     let backgroundImage = null;
     
+    // Embed logo with format detection
     if (logoData) {
       try {
+        // Try PNG first (common for logos)
         logoImage = await pdfDoc.embedPng(logoData);
-      } catch (err) {
-        console.log('⚠️ Logo embed failed, trying as JPEG');
+        console.log('✅ Logo embedded as PNG');
+      } catch (pngErr) {
         try {
+          // Try JPEG if PNG fails
           logoImage = await pdfDoc.embedJpg(logoData);
-        } catch (err2) {
-          console.log('⚠️ Logo embed failed completely');
+          console.log('✅ Logo embedded as JPEG');
+        } catch (jpgErr) {
+          console.error('❌ Logo embedding failed:', jpgErr.message);
+          return res.status(400).json({
+            success: false,
+            error: 'Failed to embed logo image. Please ensure the logo URL points to a valid PNG or JPEG image.'
+          });
         }
       }
     }
     
+    // Embed background with format detection  
     if (backgroundData) {
       try {
+        // Try JPEG first (common for photos)
         backgroundImage = await pdfDoc.embedJpg(backgroundData);
-      } catch (err) {
-        console.log('⚠️ Background embed failed');
+        console.log('✅ Background embedded as JPEG');
+      } catch (jpgErr) {
+        try {
+          // Try PNG if JPEG fails
+          backgroundImage = await pdfDoc.embedPng(backgroundData);
+          console.log('✅ Background embedded as PNG');
+        } catch (pngErr) {
+          console.error('❌ Background embedding failed:', pngErr.message);
+          return res.status(400).json({
+            success: false,
+            error: 'Failed to embed background image. Please ensure the background URL points to a valid JPEG or PNG image.'
+          });
+        }
       }
     }
     
@@ -709,7 +777,7 @@ module.exports = async function handler(req, res) {
         
         console.log(`🎫 Drawing badge for ${attendee.first_name} ${attendee.last_name} at (${position.x}, ${position.y})`);
         
-        await drawBadge(page, attendee, position.x, position.y, font, boldFont, logoImage, backgroundImage);
+        await drawBadge(page, attendee, position.x, position.y, font, boldFont, logoImage, backgroundImage, overlayOpacity, headerColor);
       }
     }
     
@@ -730,13 +798,28 @@ module.exports = async function handler(req, res) {
     console.error('❌ Enhanced Badge Generation Error:', {
       message: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      eventId,
+      backgroundImageUrl,
+      logoUrl,
+      overlayOpacity,
+      headerColor
     });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to generate enhanced badges PDF';
+    if (error.message.includes('HTTP')) {
+      errorMessage = 'Failed to load image from URL. Please check that the URLs are accessible and point to valid images.';
+    } else if (error.message.includes('embed')) {
+      errorMessage = 'Failed to embed image in PDF. Please ensure images are in JPEG or PNG format.';
+    } else if (error.message.includes('attendees')) {
+      errorMessage = 'No attendees found for this event.';
+    }
     
     return res.status(500).json({
       success: false,
-      error: 'Failed to generate enhanced badges PDF',
-      details: error.message
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

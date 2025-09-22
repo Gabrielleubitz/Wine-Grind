@@ -27,9 +27,20 @@ interface AttendeeData {
 interface BadgePreviewProps {
   attendee: AttendeeData;
   className?: string;
+  backgroundImageUrl?: string;
+  logoUrl?: string;
+  overlayOpacity?: number;
+  headerColor?: string;
 }
 
-const BadgePreview: React.FC<BadgePreviewProps> = ({ attendee, className = '' }) => {
+const BadgePreview: React.FC<BadgePreviewProps> = ({ 
+  attendee, 
+  className = '', 
+  backgroundImageUrl,
+  logoUrl,
+  overlayOpacity = 25,
+  headerColor = '#7A1E1E'
+}) => {
   // Parse attendee name
   const nameParts = attendee.name.split(' ');
   const firstName = nameParts[0] || 'Guest';
@@ -85,17 +96,22 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({ attendee, className = '' })
       
       {/* Background image with overlay */}
       <div className="absolute inset-0">
-        <img 
-          src="/event-hero.jpg" 
-          alt="Event background"
-          className="w-full h-full object-cover opacity-15"
-          onError={(e) => {
-            // Fallback to light background if image fails
-            e.currentTarget.style.display = 'none';
-          }}
-        />
+        {backgroundImageUrl ? (
+          <img 
+            src={backgroundImageUrl} 
+            alt="Event background"
+            className="w-full h-full object-cover opacity-15"
+            onError={(e) => {
+              // Fallback to light background if image fails
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : null}
         {/* Dark overlay for contrast */}
-        <div className="absolute inset-0 bg-black opacity-25"></div>
+        <div 
+          className="absolute inset-0 bg-black" 
+          style={{ opacity: overlayOpacity / 100 }}
+        ></div>
         {/* Fallback light background */}
         <div 
           className="absolute inset-0 -z-10"
@@ -108,13 +124,29 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({ attendee, className = '' })
         className="absolute top-0 left-0 w-full flex items-center px-2 py-1"
         style={{ 
           height: `${mm(LAYOUT.header.height)}px`,
-          backgroundColor: BRAND_COLORS.wine 
+          backgroundColor: headerColor 
         }}
       >
-        {/* Logo placeholder */}
+        {/* Logo */}
         <div className="flex items-center space-x-2">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="object-contain"
+              style={{
+                width: `${mm(LAYOUT.header.logoWidth)}px`,
+                height: `${mm(LAYOUT.header.logoHeight)}px`
+              }}
+              onError={(e) => {
+                // Fallback to placeholder if logo fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
           <div 
-            className="bg-white bg-opacity-20 rounded flex items-center justify-center"
+            className={`${logoUrl ? 'hidden' : ''} bg-white bg-opacity-20 rounded flex items-center justify-center`}
             style={{
               width: `${mm(LAYOUT.header.logoWidth)}px`,
               height: `${mm(LAYOUT.header.logoHeight)}px`
@@ -138,7 +170,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({ attendee, className = '' })
       <div 
         className={`absolute flex items-center justify-center text-white font-semibold uppercase tracking-tight ${chipFontSize}`}
         style={{
-          backgroundColor: roleColor,
+          backgroundColor: headerColor,
           top: `${mm(LAYOUT.header.height + LAYOUT.roleChip.marginTop)}px`,
           right: `${mm(LAYOUT.roleChip.marginRight)}px`,
           height: `${mm(LAYOUT.roleChip.height)}px`,
