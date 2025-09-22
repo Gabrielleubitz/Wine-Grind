@@ -515,33 +515,36 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
   const chipX = (badgeWidth - mm(chipWidth)) / 2;
   const chipY = mm(qr.tileSize + qr.margin + LAYOUT.roleChip.marginTop);
   
-  // Draw rounded chip with proper circular end caps
+  // Draw rounded chip with proper pill shape
   const radius = mm(LAYOUT.roleChip.radius);
   const chipHeightMm = mm(LAYOUT.roleChip.height);
   const chipWidthMm = mm(chipWidth);
   
-  // Main rectangle body (middle section)
+  // For a pill shape, use height/2 as radius for perfect rounded ends
+  const effectiveRadius = chipHeightMm / 2;
+  
+  // Main rectangle body (exclude the rounded ends)
   page.drawRectangle({
-    x: chipX + radius,
+    x: chipX + effectiveRadius,
     y: chipY,
-    width: chipWidthMm - (2 * radius),
+    width: chipWidthMm - (2 * effectiveRadius),
     height: chipHeightMm,
     color: rgb(...chipColorRgb),
   });
   
-  // Left rounded end cap (circle)
+  // Left semicircle end
   page.drawCircle({
-    x: chipX + radius,
-    y: chipY + chipHeightMm / 2,
-    size: radius,
+    x: chipX + effectiveRadius,
+    y: chipY + effectiveRadius,
+    size: effectiveRadius,
     color: rgb(...chipColorRgb),
   });
   
-  // Right rounded end cap (circle)  
+  // Right semicircle end
   page.drawCircle({
-    x: chipX + chipWidthMm - radius,
-    y: chipY + chipHeightMm / 2,
-    size: radius,
+    x: chipX + chipWidthMm - effectiveRadius,
+    y: chipY + effectiveRadius,
+    size: effectiveRadius,
     color: rgb(...chipColorRgb),
   });
   
@@ -630,6 +633,21 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
           y: qrTileY + mm(qr.padding),
           width: mm(qr.codeSize),
           height: mm(qr.codeSize),
+        });
+        
+        // Add "Connect with me!" text under QR code
+        const connectText = 'Connect with me!';
+        const connectTextSize = 10; // Small font size
+        const connectTextWidth = connectText.length * 0.6 * connectTextSize;
+        const connectTextX = (badgeWidth - connectTextWidth) / 2; // Center text
+        const connectTextY = qrTileY - mm(3); // 3mm below QR tile
+        
+        page.drawText(connectText, {
+          x: connectTextX,
+          y: connectTextY,
+          size: connectTextSize,
+          font: font,
+          color: rgb(...BRAND_COLORS.charcoal),
         });
       }
     } catch (error) {

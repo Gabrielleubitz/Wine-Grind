@@ -259,6 +259,21 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         />
       </div>
       
+      {/* Connect with me text under QR code */}
+      <div 
+        className="absolute text-center"
+        style={{
+          bottom: `${mm(LAYOUT.qr.margin) + mm(LAYOUT.qr.tileSize) + 3}px`, // 3px above QR tile
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '10px',
+          color: BRAND_COLORS.charcoal,
+          fontWeight: 'normal'
+        }}
+      >
+        Connect with me!
+      </div>
+      
       {/* Scale indicator */}
       <div className="absolute bottom-1 left-1 text-xs text-gray-500 bg-white bg-opacity-75 px-1 rounded">
         {LAYOUT.badge.width}×{LAYOUT.badge.height}mm
