@@ -515,11 +515,12 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
   const chipX = (badgeWidth - mm(chipWidth)) / 2;
   const chipY = mm(qr.tileSize + qr.margin + LAYOUT.roleChip.marginTop);
   
-  // Draw rounded chip
+  // Draw rounded chip with proper circular end caps
   const radius = mm(LAYOUT.roleChip.radius);
   const chipHeightMm = mm(LAYOUT.roleChip.height);
   const chipWidthMm = mm(chipWidth);
   
+  // Main rectangle body (middle section)
   page.drawRectangle({
     x: chipX + radius,
     y: chipY,
@@ -527,24 +528,29 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     height: chipHeightMm,
     color: rgb(...chipColorRgb),
   });
-  page.drawRectangle({
-    x: chipX,
-    y: chipY,
-    width: radius,
-    height: chipHeightMm,
-    color: rgb(...chipColorRgb),
-  });
-  page.drawRectangle({
-    x: chipX + chipWidthMm - radius,
-    y: chipY,
-    width: radius,
-    height: chipHeightMm,
+  
+  // Left rounded end cap (circle)
+  page.drawCircle({
+    x: chipX + radius,
+    y: chipY + chipHeightMm / 2,
+    size: radius,
     color: rgb(...chipColorRgb),
   });
   
-  // Draw chip text
+  // Right rounded end cap (circle)  
+  page.drawCircle({
+    x: chipX + chipWidthMm - radius,
+    y: chipY + chipHeightMm / 2,
+    size: radius,
+    color: rgb(...chipColorRgb),
+  });
+  
+  // Draw chip text - centered horizontally within chip
+  const textWidth = roleText.length * 0.6 * TYPOGRAPHY.roleChip.normal; // Estimated text width
+  const textX = chipX + (chipWidthMm - textWidth) / 2; // Center text horizontally
+  
   page.drawText(roleText, {
-    x: chipX + mm(LAYOUT.roleChip.paddingH),
+    x: textX,
     y: chipY + chipHeightMm / 2 - TYPOGRAPHY.roleChip.normal / 4,
     size: TYPOGRAPHY.roleChip.normal,
     font: font,
