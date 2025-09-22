@@ -512,6 +512,7 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
   const chipColorRgb = customHeaderColor ? hexToRgb(customHeaderColor) : BRAND_COLORS.wine;
   
   const chipX = badgeWidth - mm(chipWidth + LAYOUT.roleChip.marginRight);
+  // Position from TOP like in preview: header.height + marginTop
   const chipY = badgeHeight - mm(LAYOUT.header.height + LAYOUT.roleChip.marginTop + LAYOUT.roleChip.height);
   
   // Draw rounded chip
@@ -563,23 +564,23 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     color: rgb(...BRAND_COLORS.charcoal),
   });
   
-  // 9. Draw company
-  let currentY = badgeHeight - content.nameTop - (nameSize * 0.6) - content.companyGap;
+  // 9. Draw company (position relative to name like in preview)
+  let currentY = badgeHeight - mm(content.nameTop) - (nameSize * 0.6) - mm(content.companyGap);
   if (attendee.company && attendee.company.trim()) {
     const companyText = formatText.company(attendee.company.trim());
     
     page.drawText(companyText, {
       x: badgeX + mm(badge.padding),
-      y: badgeY + mm(currentY),
+      y: currentY,
       size: TYPOGRAPHY.company.size,
       font: font,
       color: rgb(...BRAND_COLORS.charcoal),
     });
     
-    currentY -= TYPOGRAPHY.company.size * 0.4 + content.linkedinGap;
+    currentY -= mm(TYPOGRAPHY.company.size * 0.4 + content.linkedinGap);
   }
   
-  // 10. Draw LinkedIn
+  // 10. Draw LinkedIn (position relative to company like in preview)
   if (attendee.linkedin && attendee.linkedin.trim()) {
     let linkedinText = attendee.linkedin.trim();
     if (linkedinText.startsWith('http')) {
@@ -589,21 +590,21 @@ const drawSingleBadge = async (page, attendee, x, y, font, boldFont, logoImage, 
     
     page.drawText(linkedinText, {
       x: badgeX + mm(badge.padding),
-      y: badgeY + mm(currentY),
+      y: currentY,
       size: TYPOGRAPHY.linkedin.size,
       font: font,
       color: rgb(...BRAND_COLORS.mutedText),
     });
   }
   
-  // 11. Draw QR code in bottom-right
+  // 11. Draw QR code in bottom-right (matching preview position exactly)
   if (attendee.qr_code) {
     try {
       const qrDataUrl = await generateQRCode(attendee.qr_code);
       if (qrDataUrl) {
-        // QR tile position
+        // QR tile position from bottom-right corner with margin
         const qrTileX = badgeWidth - mm(qr.tileSize + qr.margin);
-        const qrTileY = badgeY + mm(qr.margin);
+        const qrTileY = mm(qr.margin);
         
         // White tile background
         page.drawRectangle({
