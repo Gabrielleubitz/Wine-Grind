@@ -37,10 +37,11 @@ interface AttendeeData {
   phone: string;
   status: string;
   userId: string;
-  role?: string;
+  role?: string; // Event registration role
   ticket_type?: string;
   tags?: string[];
   badgeRole?: string; // Manually assigned role for badge display only
+  userRole?: string; // Actual user profile role (member, admin, speaker)
 }
 
 interface ToastState {
@@ -121,24 +122,44 @@ const AdminBadges: React.FC = () => {
       }
 
       const attendeesData: AttendeeData[] = [];
-      registrationsSnapshot.forEach(doc => {
-        const registration = doc.data();
+      
+      // First, get all registrations
+      const registrations = registrationsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data()
+      }));
+      
+      // Then fetch user profile roles for each attendee
+      for (const regDoc of registrations) {
+        const registration = regDoc.data;
+        
+        // Fetch user profile role from users collection
+        let userRole = 'member'; // default
+        try {
+          const userDoc = await getDoc(doc(db, 'users', regDoc.id));
+          if (userDoc.exists()) {
+            userRole = userDoc.data().role || 'member';
+          }
+        } catch (error) {
+          console.warn(`Could not fetch user role for ${regDoc.id}:`, error);
+        }
         
         attendeesData.push({
-          id: doc.id, // This is the userId in the subcollection structure
+          id: regDoc.id, // This is the userId in the subcollection structure
           name: registration.name || 'Guest',
           email: registration.email || '',
           work: registration.work || '',
           linkedinUsername: registration.linkedinUsername || '',
           phone: registration.phone || '',
           status: 'registered', // All registrations in subcollection are valid
-          userId: doc.id, // userId is the document ID in subcollection
-          role: registration.role || '', // Include role information
+          userId: regDoc.id, // userId is the document ID in subcollection
+          role: registration.role || '', // Event registration role
           ticket_type: registration.ticket_type || '', // For role inference
           tags: registration.tags || [], // For role inference
-          badgeRole: registration.badgeRole || '' // Badge-specific role assignment
+          badgeRole: registration.badgeRole || '', // Badge-specific role assignment
+          userRole: userRole // Actual user profile role (member, admin, speaker)
         });
-      });
+      }
 
       setAttendees(attendeesData);
       console.log(`🎫 Final loaded attendees for "${event.name}": ${attendeesData.length}`);
@@ -254,16 +275,16 @@ const AdminBadges: React.FC = () => {
     if (roleFilter === 'all') return attendees;
     
     return attendees.filter(attendee => {
-      // Use actual user sign-in role, not badge role
-      const userRole = attendee.role || attendee.ticket_type || 'member';
+      // Use actual user profile role from users collection
+      const userProfileRole = attendee.userRole || 'member';
       
       switch (roleFilter) {
         case 'admin':
-          return ['organizer', 'staff', 'admin'].includes(userRole.toLowerCase());
+          return userProfileRole.toLowerCase() === 'admin';
         case 'speaker':
-          return userRole.toLowerCase() === 'speaker';
+          return userProfileRole.toLowerCase() === 'speaker';
         case 'member':
-          return ['attendee', 'member', ''].includes(userRole.toLowerCase()) || !userRole;
+          return userProfileRole.toLowerCase() === 'member';
         default:
           return true;
       }
@@ -501,9 +522,9 @@ const AdminBadges: React.FC = () => {
                       <span className="text-sm font-medium text-gray-700">Filter by:</span>
                       {[
                         { key: 'all', label: 'All', count: attendees.length },
-                        { key: 'admin', label: 'Admins', count: attendees.filter(a => ['organizer', 'staff', 'admin'].includes((a.role || a.ticket_type || '').toLowerCase())).length },
-                        { key: 'speaker', label: 'Speakers', count: attendees.filter(a => (a.role || a.ticket_type || '').toLowerCase() === 'speaker').length },
-                        { key: 'member', label: 'Members', count: attendees.filter(a => ['attendee', 'member', ''].includes((a.role || a.ticket_type || '').toLowerCase()) || !(a.role || a.ticket_type)).length }
+                        { key: 'admin', label: 'Admins', count: attendees.filter(a => (a.userRole || 'member').toLowerCase() === 'admin').length },
+                        { key: 'speaker', label: 'Speakers', count: attendees.filter(a => (a.userRole || 'member').toLowerCase() === 'speaker').length },
+                        { key: 'member', label: 'Members', count: attendees.filter(a => (a.userRole || 'member').toLowerCase() === 'member').length }
                       ].map(({ key, label, count }) => (
                         <button
                           key={key}
