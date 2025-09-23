@@ -64,6 +64,7 @@ const AdminBadges: React.FC = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [overlayOpacity, setOverlayOpacity] = useState(25); // 25% default
   const [headerColor, setHeaderColor] = useState('#7A1E1E'); // Wine color default
+  const [roleFilter, setRoleFilter] = useState<string>('all'); // 'all', 'admin', 'speaker', 'member'
   const [toast, setToast] = useState<ToastState>({
     visible: false,
     message: '',
@@ -247,6 +248,25 @@ const AdminBadges: React.FC = () => {
       console.error('Error updating badge role:', error);
       showToast('Failed to update badge role', 'error');
     }
+  };
+
+  const getFilteredAttendees = () => {
+    if (roleFilter === 'all') return attendees;
+    
+    return attendees.filter(attendee => {
+      const currentRole = attendee.badgeRole || attendee.role || attendee.ticket_type || 'member';
+      
+      switch (roleFilter) {
+        case 'admin':
+          return ['organizer', 'staff'].includes(currentRole.toLowerCase());
+        case 'speaker':
+          return currentRole.toLowerCase() === 'speaker';
+        case 'member':
+          return ['attendee', 'member', ''].includes(currentRole.toLowerCase()) || !currentRole;
+        default:
+          return true;
+      }
+    });
   };
 
   const formatDate = (date: Date) => {
@@ -471,12 +491,40 @@ const AdminBadges: React.FC = () => {
                 {attendees.length > 0 && (
                   <div className="pt-6 border-t border-gray-200">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">Badge Role Management</h4>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600 mb-4">
                       Assign roles for badge display only. This doesn't affect user login permissions.
                     </p>
                     
+                    {/* Filter Buttons */}
+                    <div className="flex items-center space-x-3 mb-6">
+                      <span className="text-sm font-medium text-gray-700">Filter by:</span>
+                      {[
+                        { key: 'all', label: 'All', count: attendees.length },
+                        { key: 'admin', label: 'Admins', count: attendees.filter(a => ['organizer', 'staff'].includes((a.badgeRole || a.role || a.ticket_type || '').toLowerCase())).length },
+                        { key: 'speaker', label: 'Speakers', count: attendees.filter(a => (a.badgeRole || a.role || a.ticket_type || '').toLowerCase() === 'speaker').length },
+                        { key: 'member', label: 'Members', count: attendees.filter(a => ['attendee', 'member', ''].includes((a.badgeRole || a.role || a.ticket_type || '').toLowerCase()) || !(a.badgeRole || a.role || a.ticket_type)).length }
+                      ].map(({ key, label, count }) => (
+                        <button
+                          key={key}
+                          onClick={() => setRoleFilter(key)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            roleFilter === key
+                              ? 'bg-purple-600 text-white shadow-md'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {label} ({count})
+                        </button>
+                      ))}
+                    </div>
+                    
                     <div className="bg-gray-50 rounded-xl p-6 space-y-4 max-h-64 overflow-y-auto">
-                      {attendees.map((attendee) => {
+                      {getFilteredAttendees().length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>No attendees found for "{roleFilter}" filter</p>
+                        </div>
+                      ) : (
+                        getFilteredAttendees().map((attendee) => {
                         const availableRoles = ['attendee', 'speaker', 'organizer', 'sponsor', 'vip', 'staff'];
                         return (
                           <div key={attendee.id} className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
@@ -499,7 +547,8 @@ const AdminBadges: React.FC = () => {
                             </div>
                           </div>
                         );
-                      })}
+                        })
+                      )}
                     </div>
                   </div>
                 )}
