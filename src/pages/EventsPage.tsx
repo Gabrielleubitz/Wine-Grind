@@ -118,13 +118,13 @@ const EventsPage: React.FC = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-gray-50 to-white">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 fade-in px-2">
               Wine & Grind <span className="gradient-text">Events</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed fade-in-delay">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed fade-in-delay px-4">
               Discover upcoming events and explore our event history. Join exclusive gatherings where founders, investors, and innovators come together.
             </p>
           </div>
@@ -132,11 +132,11 @@ const EventsPage: React.FC = () => {
       </section>
 
       {/* Main Content */}
-      <section className="py-16 bg-white">
+      <section className="py-8 sm:py-12 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Filter Tabs */}
-          <div className="mb-12 flex justify-center">
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-full">
+          <div className="mb-8 sm:mb-12 flex justify-center overflow-x-hidden">
+            <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:space-x-1 bg-gray-100 p-1 rounded-full max-w-full">
               {[
                 { key: 'all', label: 'All Events' },
                 { key: 'active', label: 'Upcoming' },
@@ -146,7 +146,7 @@ const EventsPage: React.FC = () => {
                 <button
                   key={key}
                   onClick={() => setFilter(key as EventFilter)}
-                  className={`px-6 py-3 text-sm font-medium rounded-full transition-all duration-200 ${
+                  className={`px-3 sm:px-4 md:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
                     filter === key
                       ? 'bg-gradient-to-r from-red-700 to-blue-600 text-white shadow-lg'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
@@ -183,16 +183,16 @@ const EventsPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {filteredEvents.map((event) => {
                 const status = getEventStatus(event);
                 return (
                   <div
                     key={event.id}
-                    className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden hover-lift cursor-pointer slide-up transition-all duration-300"
+                    className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden hover-lift cursor-pointer slide-up transition-all duration-300"
                   >
                     {/* Event Image */}
-                    <div className="h-64 bg-gray-200 relative">
+                    <div className="h-48 sm:h-56 md:h-64 bg-gray-200 relative">
                       <img
                         src={event.imageUrl}
                         alt={event.title}
@@ -208,27 +208,27 @@ const EventsPage: React.FC = () => {
                     </div>
 
                     {/* Event Content */}
-                    <div className="p-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">{event.title}</h3>
+                    <div className="p-4 sm:p-6 md:p-8">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{event.title}</h3>
                       
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center space-x-3 text-gray-600">
-                          <Calendar className="h-5 w-5 text-red-700" />
-                          <span className="font-medium">{formatDate(event.date)}</span>
+                      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                        <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-red-700 flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">{formatDate(event.date)}</span>
                         </div>
-                        <div className="flex items-center space-x-3 text-gray-600">
-                          <Clock className="h-5 w-5 text-blue-600" />
-                          <span className="font-medium">{formatTime(event.date)}</span>
+                        <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">{formatTime(event.date)}</span>
                         </div>
                         {event.location && (
-                          <div className="flex items-center space-x-3 text-gray-600">
-                            <MapPin className="h-5 w-5 text-red-700" />
-                            <span className="font-medium truncate">{event.location}</span>
+                          <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                            <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-red-700 flex-shrink-0" />
+                            <span className="font-medium text-sm sm:text-base truncate">{event.location}</span>
                           </div>
                         )}
                       </div>
 
-                      <p className="text-gray-600 mb-6 leading-relaxed line-clamp-3">{event.description}</p>
+                      <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed line-clamp-3 text-sm sm:text-base">{event.description}</p>
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-sm text-gray-500">

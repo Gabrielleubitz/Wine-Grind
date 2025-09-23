@@ -463,17 +463,17 @@ const EventsPage: React.FC = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-gray-50 to-white">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 fade-in px-2">
               {user ? (
                 <>Welcome back, <span className="gradient-text">{user.displayName?.split(' ')[0] || 'Member'}</span></>
               ) : (
                 <>Wine & Grind <span className="gradient-text">Events</span></>
               )}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed fade-in-delay">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed fade-in-delay px-4">
               {user ? (
                 "Your dashboard for exclusive Wine & Grind events and tickets."
               ) : (
@@ -900,7 +900,7 @@ const EventsPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="space-y-3 mb-6">
+                      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                         <div className="text-2xl font-bold">{registration.eventName}</div>
                         <div className="opacity-90">{formatDate(registration.eventDate).date} • {formatDate(registration.eventDate).time}</div>
                         <div className="opacity-90">{registration.eventLocation}</div>
@@ -983,12 +983,12 @@ const EventsPage: React.FC = () => {
                 return (
                   <div
                     key={event.id}
-                    className={`bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden hover-lift cursor-pointer slide-up`}
+                    className={`bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden hover-lift cursor-pointer slide-up`}
                     style={{ animationDelay: `${index * 0.2}s` }}
                     onClick={(e) => handleEventClick(e, event.slug)} // Use slug
                   >
                     {/* Event Image */}
-                    <div className="h-64 bg-gray-200 relative">
+                    <div className="h-48 sm:h-56 md:h-64 bg-gray-200 relative">
                       <img
                         src={event.imageUrl}
                         alt={event.name}
@@ -1010,10 +1010,10 @@ const EventsPage: React.FC = () => {
                     </div>
 
                     {/* Event Content */}
-                    <div className="p-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">{event.name}</h3>
+                    <div className="p-4 sm:p-6 md:p-8">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{event.name}</h3>
                       
-                      <div className="space-y-3 mb-6">
+                      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                         <div className="flex items-center space-x-3 text-gray-600">
                           <Calendar className="h-5 w-5 text-red-700" />
                           <span>{formatDate(event.date).date}</span>
