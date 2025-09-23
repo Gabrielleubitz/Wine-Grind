@@ -12,7 +12,7 @@ import {
   Printer,
   Eye
 } from 'lucide-react';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../hooks/useAuth';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -37,6 +37,10 @@ interface AttendeeData {
   phone: string;
   status: string;
   userId: string;
+  role?: string;
+  ticket_type?: string;
+  tags?: string[];
+  badgeRole?: string; // Manually assigned role for badge display only
 }
 
 interface ToastState {
@@ -119,14 +123,6 @@ const AdminBadges: React.FC = () => {
       registrationsSnapshot.forEach(doc => {
         const registration = doc.data();
         
-        // Debug registration data
-        console.log('🔍 Registration data for', registration.name || 'Unknown', {
-          role: registration.role,
-          ticket_type: registration.ticket_type,
-          tags: registration.tags,
-          allData: registration
-        });
-        
         attendeesData.push({
           id: doc.id, // This is the userId in the subcollection structure
           name: registration.name || 'Guest',
@@ -138,7 +134,8 @@ const AdminBadges: React.FC = () => {
           userId: doc.id, // userId is the document ID in subcollection
           role: registration.role || '', // Include role information
           ticket_type: registration.ticket_type || '', // For role inference
-          tags: registration.tags || [] // For role inference
+          tags: registration.tags || [], // For role inference
+          badgeRole: registration.badgeRole || '' // Badge-specific role assignment
         });
       });
 
@@ -226,6 +223,30 @@ const AdminBadges: React.FC = () => {
     setTimeout(() => {
       setToast(prev => ({ ...prev, visible: false }));
     }, 5000);
+  };
+
+  const updateBadgeRole = async (attendeeId: string, newRole: string) => {
+    if (!eventId) return;
+
+    try {
+      // Update the badge role in the database
+      const attendeeRef = doc(db, 'events', eventId, 'registrations', attendeeId);
+      await updateDoc(attendeeRef, {
+        badgeRole: newRole
+      });
+
+      // Update local state
+      setAttendees(prev => prev.map(attendee => 
+        attendee.id === attendeeId 
+          ? { ...attendee, badgeRole: newRole }
+          : attendee
+      ));
+
+      showToast(`Badge role updated to ${newRole}`, 'success');
+    } catch (error) {
+      console.error('Error updating badge role:', error);
+      showToast('Failed to update badge role', 'error');
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -330,7 +351,7 @@ const AdminBadges: React.FC = () => {
 
                     <div className="flex items-center space-x-3 text-gray-600">
                       <FileText className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium">{Math.ceil(attendees.length / 4)} Pages (4 badges per page)</span>
+                      <span className="font-medium">{attendees.length} Pages (1 badge per page)</span>
                     </div>
                   </div>
                 </div>
@@ -445,6 +466,43 @@ const AdminBadges: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Role Management Section */}
+                {attendees.length > 0 && (
+                  <div className="pt-6 border-t border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Badge Role Management</h4>
+                    <p className="text-gray-600 mb-6">
+                      Assign roles for badge display only. This doesn't affect user login permissions.
+                    </p>
+                    
+                    <div className="bg-gray-50 rounded-xl p-6 space-y-4 max-h-64 overflow-y-auto">
+                      {attendees.map((attendee) => {
+                        const availableRoles = ['attendee', 'speaker', 'organizer', 'sponsor', 'vip', 'staff'];
+                        return (
+                          <div key={attendee.id} className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+                            <div>
+                              <div className="font-medium text-gray-900">{attendee.name}</div>
+                              <div className="text-sm text-gray-500">{attendee.work || attendee.email}</div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <select
+                                value={attendee.badgeRole || 'attendee'}
+                                onChange={(e) => updateBadgeRole(attendee.id, e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                              >
+                                {availableRoles.map(role => (
+                                  <option key={role} value={role}>
+                                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Badge Generation Section */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">

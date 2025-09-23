@@ -22,6 +22,7 @@ interface AttendeeData {
   role?: string;
   ticket_type?: string;
   tags?: string[];
+  badgeRole?: string; // Manually assigned role for badge display only
 }
 
 interface BadgePreviewProps {
@@ -51,15 +52,8 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
   const role = getRole({
     role: attendee.role,
     ticket_type: attendee.ticket_type,
-    tags: attendee.tags
-  });
-  
-  // Debug role detection
-  console.log('🔍 Role detection for', attendee.name, {
-    attendeeRole: attendee.role,
-    ticketType: attendee.ticket_type,
     tags: attendee.tags,
-    detectedRole: role
+    badgeRole: attendee.badgeRole
   });
   
   const roleColor = getRoleColor(role);
