@@ -28,8 +28,8 @@ export const BRAND_COLORS = {
 
 // Typography System
 export const TYPOGRAPHY = {
-  // Font stacks
-  fontFamily: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+  // Font stacks (Inter first to match website)
+  fontFamily: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
   
   // Font sizes (in points)
   name: {

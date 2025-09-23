@@ -92,6 +92,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
            width: `${mm(LAYOUT.badge.width)}px`,
            height: `${mm(LAYOUT.badge.height)}px`,
            aspectRatio: `${LAYOUT.badge.width}/${LAYOUT.badge.height}`,
+           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
          }}>
       
       {/* Background image with overlay */}

@@ -126,7 +126,10 @@ const AdminBadges: React.FC = () => {
           linkedinUsername: registration.linkedinUsername || '',
           phone: registration.phone || '',
           status: 'registered', // All registrations in subcollection are valid
-          userId: doc.id // userId is the document ID in subcollection
+          userId: doc.id, // userId is the document ID in subcollection
+          role: registration.role || '', // Include role information
+          ticket_type: registration.ticket_type || '', // For role inference
+          tags: registration.tags || [] // For role inference
         });
       });
 
