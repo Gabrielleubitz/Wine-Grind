@@ -346,7 +346,7 @@ const AdminBadges: React.FC = () => {
         subtitle="Create printable lanyard badges for event attendees"
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
         {/* Toast Notification */}
         {toast.visible && (
           <Toast 
@@ -370,30 +370,30 @@ const AdminBadges: React.FC = () => {
         {event && (
           <>
             {/* Event Information Card */}
-            <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 mb-8">
-              <div className="flex items-start justify-between mb-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-100 mb-6 sm:mb-8">
+              <div className="flex items-start justify-between mb-4 sm:mb-6">
                 <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">{event.name}</h2>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight break-words">{event.name}</h2>
                   
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-3 text-gray-600">
-                      <Calendar className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium">{formatDate(event.date)}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base">{formatDate(event.date)}</span>
                     </div>
                     
-                    <div className="flex items-center space-x-3 text-gray-600">
-                      <MapPin className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium">{event.location}</span>
+                    <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base truncate">{event.location}</span>
                     </div>
                     
-                    <div className="flex items-center space-x-3 text-gray-600">
-                      <Users className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium">{attendees.length} Confirmed Attendees</span>
+                    <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base">{attendees.length} Confirmed Attendees</span>
                     </div>
 
-                    <div className="flex items-center space-x-3 text-gray-600">
-                      <FileText className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium">{attendees.length} Pages (1 badge per page)</span>
+                    <div className="flex items-center space-x-2 sm:space-x-3 text-gray-600">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base">{attendees.length} Pages (1 badge per page)</span>
                     </div>
                   </div>
                 </div>
@@ -406,15 +406,15 @@ const AdminBadges: React.FC = () => {
               )}
 
               {/* Badge Configuration */}
-              <div className="border-t border-gray-200 pt-6 space-y-6">
+              <div className="border-t border-gray-200 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Badge Configuration</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Badge Configuration</h3>
+                  <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                     Configure badge assets and generate professional lanyard badges for all confirmed attendees.
                   </p>
                   
                   {/* URL Configuration Fields */}
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                     <div>
                       <label htmlFor="backgroundUrl" className="block text-sm font-semibold text-gray-700 mb-2">
                         Background Image URL *
@@ -425,7 +425,7 @@ const AdminBadges: React.FC = () => {
                         placeholder="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200"
                         value={backgroundImageUrl}
                         onChange={(e) => setBackgroundImageUrl(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-sm sm:text-base"
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -443,7 +443,7 @@ const AdminBadges: React.FC = () => {
                         placeholder="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/react.svg"
                         value={logoUrl}
                         onChange={(e) => setLogoUrl(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-sm sm:text-base"
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -453,7 +453,7 @@ const AdminBadges: React.FC = () => {
                   </div>
                   
                   {/* Styling Controls */}
-                  <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-gray-200">
                     <div>
                       <label htmlFor="overlayOpacity" className="block text-sm font-semibold text-gray-700 mb-2">
                         Background Overlay Darkness

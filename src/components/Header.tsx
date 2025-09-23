@@ -127,7 +127,7 @@ const SpeakerAwareHeader: React.FC = () => {
                 <img 
                   src={logoSvg}
                   alt="Wine & Grind Logo" 
-                  className="h-10 w-auto"
+                  className="h-8 sm:h-10 w-auto"
                 />
               </button>
             </div>
@@ -160,7 +160,7 @@ const SpeakerAwareHeader: React.FC = () => {
                 <img 
                   src={logoSvg}
                   alt="Wine & Grind Logo" 
-                  className="h-10 w-auto"
+                  className="h-8 sm:h-10 w-auto"
                 />
               </button>
             </div>
@@ -185,7 +185,7 @@ const SpeakerAwareHeader: React.FC = () => {
               className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               aria-label="Toggle mobile menu"
             >
-              {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
             </button>
           </div>
           
@@ -224,7 +224,7 @@ const SpeakerAwareHeader: React.FC = () => {
               <img 
                 src={logoSvg}
                 alt="Wine & Grind Logo" 
-                className="h-10 w-auto"
+                className="h-8 sm:h-10 w-auto"
               />
             </button>
           </div>
@@ -310,7 +310,7 @@ const SpeakerAwareHeader: React.FC = () => {
                     user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'
                   )}
                 </div>
-                <span className="font-medium">
+                <span className="font-medium text-sm sm:text-base hidden sm:inline">
                   {user?.displayName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}
                 </span>
                 <ChevronDown className="h-4 w-4" />
@@ -318,7 +318,7 @@ const SpeakerAwareHeader: React.FC = () => {
 
               {/* Profile Dropdown Menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                   {/* User Info */}
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
@@ -477,7 +477,7 @@ const SpeakerAwareHeader: React.FC = () => {
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             aria-label="Toggle mobile menu"
           >
-            {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
           </button>
         </div>
 
