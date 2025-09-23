@@ -204,10 +204,15 @@ export const getRole = (attendee: {
   ticket_type?: string;
   tags?: string[];
 }): keyof typeof BRAND_COLORS.roles => {
+  console.log('🔍 getRole called with:', attendee);
+  console.log('🔍 Available roles:', Object.keys(BRAND_COLORS.roles));
+  
   // Direct role mapping (highest priority)
   if (attendee.role) {
     const role = attendee.role.toLowerCase().trim();
+    console.log('🔍 Checking direct role:', role, 'in roles:', role in BRAND_COLORS.roles);
     if (role in BRAND_COLORS.roles) {
+      console.log('✅ Found direct role:', role);
       return role as keyof typeof BRAND_COLORS.roles;
     }
   }
@@ -215,8 +220,10 @@ export const getRole = (attendee: {
   // Infer from ticket_type
   if (attendee.ticket_type) {
     const ticketType = attendee.ticket_type.toLowerCase();
+    console.log('🔍 Checking ticket_type:', ticketType);
     for (const [roleKey] of Object.entries(BRAND_COLORS.roles)) {
       if (ticketType.includes(roleKey)) {
+        console.log('✅ Found role from ticket_type:', roleKey);
         return roleKey as keyof typeof BRAND_COLORS.roles;
       }
     }
@@ -224,10 +231,12 @@ export const getRole = (attendee: {
   
   // Infer from tags
   if (attendee.tags && Array.isArray(attendee.tags)) {
+    console.log('🔍 Checking tags:', attendee.tags);
     for (const tag of attendee.tags) {
       const tagLower = tag.toLowerCase();
       for (const [roleKey] of Object.entries(BRAND_COLORS.roles)) {
         if (tagLower.includes(roleKey)) {
+          console.log('✅ Found role from tag:', roleKey);
           return roleKey as keyof typeof BRAND_COLORS.roles;
         }
       }
@@ -235,6 +244,7 @@ export const getRole = (attendee: {
   }
   
   // Default to attendee
+  console.log('⚠️ No role found, defaulting to attendee');
   return 'attendee';
 };
 

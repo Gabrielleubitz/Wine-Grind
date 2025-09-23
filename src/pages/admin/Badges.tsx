@@ -118,6 +118,15 @@ const AdminBadges: React.FC = () => {
       const attendeesData: AttendeeData[] = [];
       registrationsSnapshot.forEach(doc => {
         const registration = doc.data();
+        
+        // Debug registration data
+        console.log('🔍 Registration data for', registration.name || 'Unknown', {
+          role: registration.role,
+          ticket_type: registration.ticket_type,
+          tags: registration.tags,
+          allData: registration
+        });
+        
         attendeesData.push({
           id: doc.id, // This is the userId in the subcollection structure
           name: registration.name || 'Guest',

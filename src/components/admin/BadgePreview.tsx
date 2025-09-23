@@ -53,6 +53,15 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
     ticket_type: attendee.ticket_type,
     tags: attendee.tags
   });
+  
+  // Debug role detection
+  console.log('🔍 Role detection for', attendee.name, {
+    attendeeRole: attendee.role,
+    ticketType: attendee.ticket_type,
+    tags: attendee.tags,
+    detectedRole: role
+  });
+  
   const roleColor = getRoleColor(role);
   const company = attendee.work ? formatText.company(attendee.work) : '';
   
