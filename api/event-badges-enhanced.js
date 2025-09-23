@@ -121,8 +121,16 @@ let assetCache = {
 
 // Get role from attendee data with normalization
 const getRole = (attendee) => {
-  // Direct role mapping (highest priority)
-  if (attendee.role) {
+  // Check for manually assigned badge role first (highest priority)
+  if (attendee.badgeRole && attendee.badgeRole.trim()) {
+    const badgeRole = attendee.badgeRole.toLowerCase().trim();
+    if (BRAND_COLORS.roles[badgeRole]) {
+      return badgeRole;
+    }
+  }
+  
+  // Direct role mapping
+  if (attendee.role && attendee.role.trim()) {
     const role = attendee.role.toLowerCase().trim();
     if (BRAND_COLORS.roles[role]) {
       return role;
@@ -130,7 +138,7 @@ const getRole = (attendee) => {
   }
   
   // Infer from ticket_type
-  if (attendee.ticket_type) {
+  if (attendee.ticket_type && attendee.ticket_type.trim()) {
     const ticketType = attendee.ticket_type.toLowerCase();
     for (const roleKey of Object.keys(BRAND_COLORS.roles)) {
       if (ticketType.includes(roleKey)) {
@@ -140,7 +148,7 @@ const getRole = (attendee) => {
   }
   
   // Infer from tags
-  if (attendee.tags && Array.isArray(attendee.tags)) {
+  if (attendee.tags && Array.isArray(attendee.tags) && attendee.tags.length > 0) {
     for (const tag of attendee.tags) {
       const tagLower = tag.toLowerCase();
       for (const roleKey of Object.keys(BRAND_COLORS.roles)) {
@@ -933,6 +941,7 @@ const getEventAttendees = async (eventId) => {
         role: registration.role || '', // Direct role if provided
         ticket_type: registration.ticket_type || '', // For role inference
         tags: registration.tags || [], // For role inference
+        badgeRole: registration.badgeRole || '', // Manually assigned badge role
         qr_code: registration.qrCodeUrl || registration.ticket_url || `https://winengrind.com/connect?to=${userId}&event=${eventId}`,
         email: registration.email || ''
       });
