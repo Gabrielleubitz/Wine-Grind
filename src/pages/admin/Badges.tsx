@@ -254,15 +254,16 @@ const AdminBadges: React.FC = () => {
     if (roleFilter === 'all') return attendees;
     
     return attendees.filter(attendee => {
-      const currentRole = attendee.badgeRole || attendee.role || attendee.ticket_type || 'member';
+      // Use actual user sign-in role, not badge role
+      const userRole = attendee.role || attendee.ticket_type || 'member';
       
       switch (roleFilter) {
         case 'admin':
-          return ['organizer', 'staff'].includes(currentRole.toLowerCase());
+          return ['organizer', 'staff', 'admin'].includes(userRole.toLowerCase());
         case 'speaker':
-          return currentRole.toLowerCase() === 'speaker';
+          return userRole.toLowerCase() === 'speaker';
         case 'member':
-          return ['attendee', 'member', ''].includes(currentRole.toLowerCase()) || !currentRole;
+          return ['attendee', 'member', ''].includes(userRole.toLowerCase()) || !userRole;
         default:
           return true;
       }
@@ -500,9 +501,9 @@ const AdminBadges: React.FC = () => {
                       <span className="text-sm font-medium text-gray-700">Filter by:</span>
                       {[
                         { key: 'all', label: 'All', count: attendees.length },
-                        { key: 'admin', label: 'Admins', count: attendees.filter(a => ['organizer', 'staff'].includes((a.badgeRole || a.role || a.ticket_type || '').toLowerCase())).length },
-                        { key: 'speaker', label: 'Speakers', count: attendees.filter(a => (a.badgeRole || a.role || a.ticket_type || '').toLowerCase() === 'speaker').length },
-                        { key: 'member', label: 'Members', count: attendees.filter(a => ['attendee', 'member', ''].includes((a.badgeRole || a.role || a.ticket_type || '').toLowerCase()) || !(a.badgeRole || a.role || a.ticket_type)).length }
+                        { key: 'admin', label: 'Admins', count: attendees.filter(a => ['organizer', 'staff', 'admin'].includes((a.role || a.ticket_type || '').toLowerCase())).length },
+                        { key: 'speaker', label: 'Speakers', count: attendees.filter(a => (a.role || a.ticket_type || '').toLowerCase() === 'speaker').length },
+                        { key: 'member', label: 'Members', count: attendees.filter(a => ['attendee', 'member', ''].includes((a.role || a.ticket_type || '').toLowerCase()) || !(a.role || a.ticket_type)).length }
                       ].map(({ key, label, count }) => (
                         <button
                           key={key}
