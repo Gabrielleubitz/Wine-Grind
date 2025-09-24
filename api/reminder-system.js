@@ -219,15 +219,16 @@ async function processReminders(intervalMs, reminderType) {
     // Get all upcoming events
     const events = await EventService.getAllEvents();
     const now = new Date();
-    const targetTime = new Date(now.getTime() + intervalMs);
     
     // Find events that need reminders
     const eventsNeedingReminders = events.filter(event => {
       const eventDate = new Date(event.date);
       const timeDiff = eventDate.getTime() - now.getTime();
       
-      // Check if event is within the reminder window (±15 minutes)
-      return Math.abs(timeDiff - intervalMs) <= 15 * 60 * 1000;
+      // For daily cron, check if event is within the reminder window (±12 hours)
+      // This allows us to catch all reminders that should have been sent
+      const windowSize = 12 * 60 * 60 * 1000; // 12 hours
+      return Math.abs(timeDiff - intervalMs) <= windowSize;
     });
     
     console.log(`📅 Found ${eventsNeedingReminders.length} events needing ${reminderType} reminders`);
