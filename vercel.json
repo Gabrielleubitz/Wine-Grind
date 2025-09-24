@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/reminder-system",
+      "path": "/api/automation-hub",
       "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/badge-automation",
-      "schedule": "0 20 * * *"
-    },
-    {
-      "path": "/api/post-event-automation", 
-      "schedule": "0 10 * * *"
     }
   ],
   "headers": [
