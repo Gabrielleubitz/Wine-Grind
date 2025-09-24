@@ -1,4 +1,23 @@
 {
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/reminder-system",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/badge-automation",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/post-event-automation", 
+      "schedule": "0 10 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
