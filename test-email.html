@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enhanced Registration Email</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: linear-gradient(135deg, #C8102E 0%, #1976D2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #C8102E;">🧪 Test Enhanced Registration Email</h1>
+        <p>Test the new registration confirmation email with event details, navigation links, and calendar integration.</p>
+        
+        <form id="emailTestForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="John Doe" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="john.doe@example.com" required>
+            </div>
+            
+            <button type="submit" class="button">📧 Send Test Email</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('emailTestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const resultDiv = document.getElementById('result');
+            
+            // Show loading
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Sending test email...';
+            
+            try {
+                const response = await fetch('/api/send-registration-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        eventDetails: {
+                            name: "Wine & Grind 4.0",
+                            date: "June 28th, 2025", 
+                            time: "18:30 - 22:00",
+                            location: "Deli Vino, Netanya",
+                            address: "Natan Yonatan St 10, Netanya, Israel",
+                            description: "Join us for Wine & Grind 4.0 - where bold ideas meet real conversations. This exclusive event brings together founders, investors, and operators for meaningful networking and discussions about AI agents in business."
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Email sent successfully!</strong><br>
+                        Test email sent to: <strong>${email}</strong><br>
+                        Check your inbox for the enhanced registration confirmation.
+                        <br><br>
+                        <strong>Email includes:</strong>
+                        <ul>
+                            <li>✅ Event details (name, date, time, location)</li>
+                            <li>🗺️ Navigation links (Google Maps, Waze)</li>
+                            <li>📅 Calendar integration (Google, Outlook)</li>
+                            <li>🎨 Professional styling and branding</li>
+                        </ul>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ <strong>Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Network Error:</strong> ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

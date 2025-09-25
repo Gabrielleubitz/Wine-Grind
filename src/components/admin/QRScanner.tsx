@@ -831,7 +831,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
           <h3 className="font-semibold text-gray-900 mb-2">Event-Specific QR Scanner:</h3>
           <ul className="text-sm text-gray-600 space-y-1">
             <li>• <strong>Event Verification:</strong> Verifies registration for the selected event</li>
-            <li>• <strong>QR Format:</strong> Supports "eventId-userId" format</li>
+            <li>• <strong>QR Format:</strong> Supports both connection URLs and "eventId-userId" format</li>
+            <li>• <strong>Badge Support:</strong> Scans connection URLs from badges (camera-friendly)</li>
             <li>• <strong>Registration Check:</strong> Confirms user is registered for the specific event</li>
             <li>• <strong>Check-in Status:</strong> Prevents duplicate check-ins</li>
             <li>• <strong>Event Info:</strong> Shows event name and registration details</li>

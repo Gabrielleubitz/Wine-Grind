@@ -147,13 +147,24 @@ export const useRegistration = () => {
 
       // Send email notifications
       try {
+        // Prepare event details for email
+        const eventDetails = {
+          name: "Wine & Grind 4.0",
+          date: "June 28th, 2025", 
+          time: "18:30 - 22:00",
+          location: "Deli Vino, Netanya",
+          address: "Natan Yonatan St 10, Netanya, Israel",
+          description: "Join us for Wine & Grind 4.0 - where bold ideas meet real conversations. This exclusive event brings together founders, investors, and operators for meaningful networking and discussions about AI agents in business."
+        };
+
         // Send confirmation email to user
         await fetch('/api/send-registration-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: finalData.email,
-            name: finalData.name
+            name: finalData.name,
+            eventDetails: eventDetails
           })
         });
 
@@ -165,7 +176,8 @@ export const useRegistration = () => {
             name: finalData.name,
             email: finalData.email,
             phone: finalData.phone,
-            work: finalData.work
+            work: finalData.work,
+            eventDetails: eventDetails
           })
         });
 

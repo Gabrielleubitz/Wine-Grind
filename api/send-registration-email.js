@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { email, name } = req.body;
+    const { email, name, eventDetails } = req.body;
 
     // Validate required fields
     if (!email || !name) {
@@ -24,6 +24,16 @@ module.exports = async function handler(req, res) {
         error: 'Missing required fields: email and name are required' 
       });
     }
+
+    // Default event details if not provided
+    const event = eventDetails || {
+      name: "Wine & Grind 4.0",
+      date: "June 28th, 2025", 
+      time: "18:30 - 22:00",
+      location: "Deli Vino, Netanya",
+      address: "Natan Yonatan St 10, Netanya, Israel",
+      description: "Join us for Wine & Grind 4.0 - where bold ideas meet real conversations. This exclusive event brings together founders, investors, and operators for meaningful networking and discussions."
+    };
 
     // Get Mailjet credentials from environment variables
     const mailjetPublicKey = process.env.MJ_APIKEY_PUBLIC;
@@ -44,7 +54,43 @@ module.exports = async function handler(req, res) {
       mailjetPrivateKey
     );
 
-    console.log(`📧 Sending registration confirmation email to ${email}`);
+    console.log(`📧 Sending registration confirmation email to ${email} for ${event.name}`);
+
+    // Generate navigation and calendar links
+    const encodedAddress = encodeURIComponent(event.address);
+    const googleMapsUrl = `https://maps.google.com/maps?q=${encodedAddress}`;
+    const wazeUrl = `https://waze.com/ul?q=${encodedAddress}`;
+    
+    // Generate calendar links (Google Calendar format)
+    const eventDateTime = new Date('2025-06-28T18:30:00+03:00'); // Israel timezone
+    const endDateTime = new Date('2025-06-28T22:00:00+03:00');
+    
+    const formatCalendarDate = (date) => {
+      return date.toISOString().replace(/-|:|\.\d\d\d/g, '');
+    };
+    
+    const calendarParams = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: event.name,
+      dates: `${formatCalendarDate(eventDateTime)}/${formatCalendarDate(endDateTime)}`,
+      details: event.description,
+      location: event.address,
+      trp: 'false'
+    });
+    
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?${calendarParams.toString()}`;
+    
+    // Generate Outlook calendar URL
+    const outlookParams = new URLSearchParams({
+      rru: 'addevent',
+      startdt: eventDateTime.toISOString(),
+      enddt: endDateTime.toISOString(),
+      subject: event.name,
+      body: event.description,
+      location: event.address
+    });
+    
+    const outlookCalendarUrl = `https://outlook.live.com/calendar/0/deeplink/compose?${outlookParams.toString()}`;
 
     // Send email via Mailjet
     const response = await mailjet.post('send', { version: 'v3.1' }).request({
@@ -55,54 +101,133 @@ module.exports = async function handler(req, res) {
             Name: "Wine & Grind"
           },
           To: [{ Email: email }],
-          Subject: "Registration Received - Wine & Grind",
+          Subject: `✅ Registration Confirmed - ${event.name}`,
           TextPart: `
 Hi ${name},
 
-Thank you for registering for Wine & Grind!
+🎉 Great news! Your registration for ${event.name} has been confirmed!
 
-Your registration has been received and is currently under review. We'll notify you once your spot is confirmed.
+EVENT DETAILS:
+📅 Date: ${event.date}
+⏰ Time: ${event.time}
+📍 Location: ${event.location}
+🏢 Address: ${event.address}
 
-What to expect next:
-• We'll review your registration within 24 hours
-• You'll receive an email confirmation once approved
-• Further event details will be sent closer to the event date
+NAVIGATION:
+• Google Maps: ${googleMapsUrl}
+• Waze: ${wazeUrl}
 
-If you have any questions, feel free to reply to this email.
+ADD TO CALENDAR:
+• Google Calendar: ${googleCalendarUrl}
+• Outlook Calendar: ${outlookCalendarUrl}
 
-Looking forward to seeing you soon!
+WHAT TO EXPECT:
+${event.description}
+
+NEXT STEPS:
+• Save the date and add to your calendar
+• Bring your smartphone for QR code networking
+• Arrive on time to make the most of networking opportunities
+• Dress code: Business casual
+
+We can't wait to see you there!
+
+Questions? Reply to this email anytime.
 
 – The Wine & Grind Team
           `,
           HTMLPart: `
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h1 style="color: #C8102E;">Wine & Grind</h1>
+<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);">
+  
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #C8102E 0%, #1976D2 100%); padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Wine & Grind</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Where Bold Ideas Meet Real Conversations</p>
   </div>
   
-  <p>Hi ${name},</p>
-  
-  <p><strong>Thank you for registering for Wine & Grind!</strong></p>
-  
-  <p>Your registration has been received and is currently under review. We'll notify you once your spot is confirmed.</p>
-  
-  <h3 style="color: #C8102E;">What to expect next:</h3>
-  <ul>
-    <li>We'll review your registration within 24 hours</li>
-    <li>You'll receive an email confirmation once approved</li>
-    <li>Further event details will be sent closer to the event date</li>
-  </ul>
-  
-  <p>If you have any questions, feel free to reply to this email.</p>
-  
-  <p>Looking forward to seeing you soon!</p>
-  
-  <p>– The Wine & Grind Team</p>
-  
-  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center;">
-    <p>Wine & Grind - Where Bold Ideas Meet Real Conversations</p>
-    <p>This email was sent because you registered for an event at winengrind.com</p>
+  <!-- Success Message -->
+  <div style="background: #4CAF50; color: white; text-align: center; padding: 15px;">
+    <h2 style="margin: 0; font-size: 20px;">🎉 Registration Confirmed!</h2>
   </div>
+  
+  <!-- Content -->
+  <div style="background: white; padding: 30px 20px;">
+    
+    <p style="font-size: 16px; margin-bottom: 20px;">Hi <strong>${name}</strong>,</p>
+    
+    <p style="font-size: 16px; margin-bottom: 25px;">Great news! Your registration for <strong>${event.name}</strong> has been confirmed. We're excited to see you there!</p>
+    
+    <!-- Event Details Card -->
+    <div style="background: #f8f9fa; border-left: 4px solid #C8102E; padding: 20px; margin: 25px 0; border-radius: 4px;">
+      <h3 style="color: #C8102E; margin: 0 0 15px 0; font-size: 18px;">📅 Event Details</h3>
+      
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #333;">Event:</strong> ${event.name}
+      </div>
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #333;">Date:</strong> ${event.date}
+      </div>
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #333;">Time:</strong> ${event.time}
+      </div>
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #333;">Venue:</strong> ${event.location}
+      </div>
+      <div style="margin-bottom: 0;">
+        <strong style="color: #333;">Address:</strong> ${event.address}
+      </div>
+    </div>
+    
+    <!-- Navigation Buttons -->
+    <div style="margin: 30px 0;">
+      <h3 style="color: #1976D2; margin: 0 0 15px 0; font-size: 18px;">🗺️ Get Directions</h3>
+      <div style="text-align: center;">
+        <a href="${googleMapsUrl}" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; margin: 5px 8px; font-weight: bold; font-size: 14px;">📍 Google Maps</a>
+        <a href="${wazeUrl}" style="display: inline-block; background: #33CCFF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; margin: 5px 8px; font-weight: bold; font-size: 14px;">🚗 Waze</a>
+      </div>
+    </div>
+    
+    <!-- Calendar Buttons -->
+    <div style="margin: 30px 0;">
+      <h3 style="color: #1976D2; margin: 0 0 15px 0; font-size: 18px;">📅 Add to Calendar</h3>
+      <div style="text-align: center;">
+        <a href="${googleCalendarUrl}" style="display: inline-block; background: #34A853; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; margin: 5px 8px; font-weight: bold; font-size: 14px;">📅 Google Calendar</a>
+        <a href="${outlookCalendarUrl}" style="display: inline-block; background: #0078D4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; margin: 5px 8px; font-weight: bold; font-size: 14px;">📅 Outlook</a>
+      </div>
+    </div>
+    
+    <!-- Event Description -->
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <h3 style="color: #1976D2; margin: 0 0 12px 0; font-size: 18px;">What to Expect</h3>
+      <p style="margin: 0; line-height: 1.6; color: #333;">${event.description}</p>
+    </div>
+    
+    <!-- Next Steps -->
+    <div style="margin: 30px 0;">
+      <h3 style="color: #C8102E; margin: 0 0 15px 0; font-size: 18px;">✅ Next Steps</h3>
+      <ul style="padding-left: 20px; line-height: 1.8; color: #333;">
+        <li><strong>Save the date</strong> - Click the calendar buttons above</li>
+        <li><strong>Bring your smartphone</strong> - For QR code networking</li>
+        <li><strong>Arrive on time</strong> - Make the most of networking opportunities</li>
+        <li><strong>Dress code</strong> - Business casual</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin: 40px 0 20px 0; padding: 20px; background: linear-gradient(135deg, #C8102E 0%, #1976D2 100%); border-radius: 8px;">
+      <p style="color: white; font-size: 18px; font-weight: bold; margin: 0;">We can't wait to see you there! 🥂</p>
+    </div>
+    
+    <p style="text-align: center; color: #666; font-size: 14px;">Questions? Reply to this email anytime.</p>
+    <p style="text-align: center; color: #333; font-weight: bold;">– The Wine & Grind Team</p>
+    
+  </div>
+  
+  <!-- Footer -->
+  <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eee; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 10px 0; font-size: 14px; color: #666; font-weight: bold;">Wine & Grind</p>
+    <p style="margin: 0; font-size: 12px; color: #999;">This email was sent because you registered for an event at winengrind.com</p>
+  </div>
+  
 </div>
           `
         }

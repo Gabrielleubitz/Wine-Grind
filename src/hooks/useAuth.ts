@@ -117,6 +117,21 @@ export const useAuth = () => {
         await retryOnNetworkFailure(async () => setDoc(userDocRef, newUserData));
         console.log('✅ Created new user profile with pending status');
         
+        // Send signup confirmation email to user
+        try {
+          await fetch('/api/send-signup-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: newUserData.email,
+              name: newUserData.name
+            })
+          });
+          console.log('✅ Signup confirmation email sent to user');
+        } catch (emailError) {
+          console.error('❌ Failed to send signup confirmation email:', emailError);
+        }
+        
         // Send admin SMS notification for pending approval
         try {
           await fetch('/api/send-sms', {
