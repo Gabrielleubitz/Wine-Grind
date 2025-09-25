@@ -948,13 +948,29 @@ const getEventAttendees = async (eventId) => {
       const registration = doc.data();
       const userId = doc.id;
       
-      // Use the stored connection URL, or fall back to generating it
-      const qrCodeUrl = registration.qrCodeUrl || `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
+      // Debug the input variables first
+      console.log(`🔍 Debug variables for ${registration.name || 'Unknown'}:`);
+      console.log(`   - userId variable: "${userId}"`);
+      console.log(`   - eventId variable: "${eventId}"`);
+      console.log(`   - userId type: ${typeof userId}`);
+      console.log(`   - eventId type: ${typeof eventId}`);
       
-      console.log(`👤 Processing attendee ${registration.name || 'Unknown'} (${userId}):`);
+      // Check registration fields
       console.log(`   - registration.qrCodeUrl: "${registration.qrCodeUrl}"`);
       console.log(`   - registration.ticket_url: "${registration.ticket_url}"`);
+      
+      // Generate URL components step by step
+      const fallbackUrl = `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
+      console.log(`   - generated fallback URL: "${fallbackUrl}"`);
+      
+      // Use the stored connection URL, or fall back to generating it
+      const qrCodeUrl = registration.qrCodeUrl || fallbackUrl;
       console.log(`   - final qrCodeUrl: "${qrCodeUrl}"`);
+      
+      // Check if the final URL contains any suspicious data
+      if (qrCodeUrl.includes('sk-') || qrCodeUrl.includes('API_KEY')) {
+        console.error(`🚨 ALERT: QR code contains suspicious data: ${qrCodeUrl}`);
+      }
       
       attendees.push({
         id: userId,
@@ -1013,6 +1029,17 @@ module.exports = async function handler(req, res) {
   
   try {
     const { eventId, backgroundImageUrl, logoUrl, overlayOpacity, headerColor } = req.query;
+    
+    // Debug: Check for environment variable contamination
+    console.log('🔍 Environment Debug Check:');
+    console.log(`   - eventId from request: "${eventId}"`);
+    console.log(`   - process.env keys containing 'OPENAI': ${Object.keys(process.env).filter(k => k.includes('OPENAI'))}`);
+    console.log(`   - process.env keys containing 'API': ${Object.keys(process.env).filter(k => k.includes('API')).slice(0, 5)}`);
+    
+    // Check if eventId somehow got contaminated
+    if (eventId && eventId.includes('sk-')) {
+      console.error('🚨 CRITICAL: eventId parameter contains API key data:', eventId);
+    }
     
     if (!eventId) {
       return res.status(400).json({
