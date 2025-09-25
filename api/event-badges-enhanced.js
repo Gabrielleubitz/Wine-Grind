@@ -205,8 +205,7 @@ const fitText = (text, maxWidthPt, maxSizePt, minSizePt, estimatedCharWidth = 0.
 // Generate high-quality QR code with proper quiet zone
 const generateQRCode = async (data) => {
   try {
-    console.log('🔍 Generating QR code for data:', data);
-    const qrCode = await QRCode.toDataURL(data, {
+    return await QRCode.toDataURL(data, {
       width: 400, // High resolution for 300 DPI print
       margin: LAYOUT.qr.quietZone, // 4 module quiet zone as specified
       errorCorrectionLevel: PRINT_SPECS.qrErrorCorrection, // H for high error correction
@@ -215,10 +214,8 @@ const generateQRCode = async (data) => {
         light: '#FFFFFF'
       }
     });
-    console.log('✅ QR code generated successfully for:', data);
-    return qrCode;
   } catch (error) {
-    console.error('❌ Error generating QR code for data:', data, 'Error:', error);
+    console.error('❌ Error generating QR code:', error);
     return null;
   }
 };
@@ -935,9 +932,8 @@ const getEventAttendees = async (eventId) => {
       const registration = doc.data();
       const userId = doc.id;
       
-      const qrCodeUrl = registration.qrCodeUrl || registration.ticket_url || `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
-      
-      console.log(`🏷️ Processing attendee ${userId}: QR Code will be:`, qrCodeUrl);
+      // Use the stored connection URL, or fall back to generating it
+      const qrCodeUrl = registration.qrCodeUrl || `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
       
       attendees.push({
         id: userId,

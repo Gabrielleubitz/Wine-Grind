@@ -373,13 +373,17 @@ export class EventService {
         throw new Error('Registration is not available for this event');
       }
 
-      // Generate QR code URL based on eventId + userId
-      const qrCodeUrl = `${eventId}-${userId}`;
+      // Generate connection URL for QR code (camera-scannable)
+      const qrCodeUrl = `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
+      
+      // Also store the check-in code for admin scanner
+      const checkInCode = `${eventId}-${userId}`;
 
       const regRef = doc(db, 'events', eventId, 'registrations', userId);
       await setDoc(regRef, {
         ...registrationData,
-        qrCodeUrl,
+        qrCodeUrl, // Connection URL for user-to-user scanning
+        checkInCode, // Simple code for admin check-in scanner
         checkedIn: false,
         registeredAt: serverTimestamp()
       });

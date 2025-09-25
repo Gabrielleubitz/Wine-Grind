@@ -114,7 +114,8 @@
         </div>
         
         <button class="test-button" onclick="generateBadges()">🎫 Generate Badges PDF</button>
-        <button class="test-button" onclick="testQRGeneration()" style="background: #4CAF50;">🔍 Test QR Code Generation</button>
+        <button class="test-button" onclick="testQRData()" style="background: #4CAF50;">🔍 Test QR Data Generation</button>
+        <button class="test-button" onclick="testQRGeneration()" style="background: #2196F3;">🧪 Test QR URL Format</button>
         
         <div id="result" class="result"></div>
         
@@ -196,6 +197,66 @@
                     
                     resultDiv.className = 'result error';
                     resultDiv.innerHTML = `❌ <strong>Error:</strong> ${errorData}`;
+                }
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Network Error:</strong> ${error.message}`;
+            }
+        }
+        
+        async function testQRData() {
+            const eventId = document.getElementById('eventSelect').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!eventId) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please select an event first';
+                return;
+            }
+            
+            // Show loading
+            resultDiv.className = 'result loading';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Testing QR data generation...';
+            
+            try {
+                console.log('🔍 Testing QR data for event:', eventId);
+                
+                const response = await fetch(`/api/test-qr-data?eventId=${eventId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('✅ QR data test results:', data);
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>QR Data Test Completed</strong><br>
+                        📊 Event: ${data.eventId}<br>
+                        👥 Total attendees: ${data.totalAttendees}<br>
+                        📱 Generated from template: ${data.analysis.generatedFromTemplate}<br>
+                        🔗 With existing QR URLs: ${data.analysis.withExistingQrUrl}<br>
+                        🎫 With ticket URLs: ${data.analysis.withTicketUrl}<br><br>
+                        <strong>🔍 Check console for detailed QR URL data</strong>
+                    `;
+                    
+                    // Log detailed data
+                    console.table(data.qrData);
+                    
+                    // Show first few examples
+                    const examples = data.qrData.slice(0, 3);
+                    console.log('📱 QR URL Examples:');
+                    examples.forEach((item, index) => {
+                        console.log(`${index + 1}. User: ${item.userName} (${item.userId})`);
+                        console.log(`   QR URL: ${item.generatedQrUrl}`);
+                        console.log(`   Generated from template: ${item.isTemplateGenerated}`);
+                    });
+                    
+                } else {
+                    console.error('❌ QR data test failed:', data);
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ <strong>Error:</strong> ${data.error}`;
                 }
             } catch (error) {
                 console.error('❌ Network error:', error);
