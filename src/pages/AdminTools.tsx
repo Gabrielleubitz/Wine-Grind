@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Navigate, Link } from 'react-router-dom';
 import { EventService } from '../services/eventService';
 import { useAdminScanner } from '../hooks/useAdminScanner';
-import { Calendar, Users, ChevronDown, MessageSquare, Megaphone, Mic, UserCog, UserPlus, Zap, FileText } from 'lucide-react';
+import { Calendar, Users, ChevronDown, MessageSquare, Megaphone, Mic, UserCog, UserPlus, Zap, FileText, Wand2, RefreshCw } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -329,152 +329,213 @@ const AdminTools: React.FC = () => {
           </p>
         </div>
 
-        {/* Quick Actions - Updated to include System Test */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
-          <Link
-            to="/admin/events"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <Calendar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-purple-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Event Management</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Create and manage events</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/admin/sms"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <MessageSquare className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">SMS Panel</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Send messages to registrants</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/admin/announcements"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <Megaphone className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-orange-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Announcements</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Publish updates to members</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/admin/users"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <UserCog className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-green-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">User Management</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Manage user roles</p>
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Additional Admin Tools */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 mb-8 sm:mb-12">
-          <Link
-            to="/admin/events/create"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <Calendar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-green-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Create Event</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Add a new Wine & Grind event</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/admin/speakers"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <Mic className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-purple-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Speaker Management</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Manage speakers and their files</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/admin/pending-registrations"
-            className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift relative"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <UserPlus className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-red-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Pending Registrations</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Approve new user signups</p>
-              </div>
-            </div>
-            
-            {/* Pending Count Badge */}
-            {!loadingPendingCount && pendingCount > 0 && (
-              <div className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
-                {pendingCount}
-              </div>
-            )}
-          </Link>
+        {/* Core Admin Functions */}
+        <div className="space-y-8">
           
-          <Link
-            to="/admin/system-test"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <Zap className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">System Test</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Test APIs and integrations</p>
-              </div>
-            </div>
-          </Link>
+          {/* Event & User Management */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📅 Event & User Management</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Link
+                to="/admin/events"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Calendar className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Manage Events</h4>
+                    <p className="text-gray-600 text-sm">View and edit existing events</p>
+                  </div>
+                </div>
+              </Link>
 
-          <Link
-            to="/admin/badges"
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
-          >
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="flex-shrink-0">
-                <FileText className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-indigo-600" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Badge Management</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Manage event badges & generate PDFs</p>
-              </div>
+              <Link
+                to="/admin/events/create"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Calendar className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Create Event</h4>
+                    <p className="text-gray-600 text-sm">Add a new Wine & Grind event</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/users"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <UserCog className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Users</h4>
+                    <p className="text-gray-600 text-sm">Manage user roles</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/pending-registrations"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift relative"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <UserPlus className="h-8 w-8 text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Registrations</h4>
+                    <p className="text-gray-600 text-sm">Approve new signups</p>
+                  </div>
+                </div>
+                
+                {!loadingPendingCount && pendingCount > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                    {pendingCount}
+                  </div>
+                )}
+              </Link>
             </div>
-          </Link>
+          </div>
+
+          {/* Communication Tools */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📢 Communication</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Link
+                to="/admin/sms"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <MessageSquare className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">SMS Messages</h4>
+                    <p className="text-gray-600 text-sm">Send messages to members</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/announcements"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Megaphone className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Announcements</h4>
+                    <p className="text-gray-600 text-sm">Publish updates</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/ad-generator"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Wand2 className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Ad Generator</h4>
+                    <p className="text-gray-600 text-sm">AI-powered marketing ads</p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Event Tools - Always Visible */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">🎯 Event Tools</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <Link
+                to="/admin/speakers"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Mic className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Speakers</h4>
+                    <p className="text-gray-600 text-sm">Manage speaker files</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/check-in"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Check-in</h4>
+                    <p className="text-gray-600 text-sm">Event check-in system</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/badges"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <FileText className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Badges</h4>
+                    <p className="text-gray-600 text-sm">Generate event badges</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/system-test"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <Zap className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">System Test</h4>
+                    <p className="text-gray-600 text-sm">Test integrations</p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/profile-sync"
+                className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 hover-lift"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <RefreshCw className="h-8 w-8 text-teal-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-semibold text-gray-900">Profile Sync</h4>
+                    <p className="text-gray-600 text-sm">Fix profile picture display</p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
         </div>
 
         {/* Event Selection Dropdown */}

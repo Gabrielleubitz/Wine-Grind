@@ -6,9 +6,10 @@ import RegistrationConfirmation from './RegistrationConfirmation';
 
 interface RegistrationFormProps {
   onSuccess: () => void;
+  eventId?: string;
 }
 
-const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess }) => {
+const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, eventId = 'default-event' }) => {
   const { user } = useAuth();
   const { submitRegistration, submitting, error } = useRegistration();
   
@@ -67,7 +68,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess }) => {
 
   // Show confirmation if registration was successful
   if (showConfirmation && submittedData) {
-    return <RegistrationConfirmation data={submittedData} />;
+    return <RegistrationConfirmation data={submittedData} eventId={eventId} />;
   }
 
   return (

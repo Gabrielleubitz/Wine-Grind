@@ -23,7 +23,7 @@ const ConnectPage: React.FC = () => {
   // Parse the target user ID from the URL
   const searchParams = new URLSearchParams(location.search);
   const targetUserId = searchParams.get('to');
-  const eventId = searchParams.get('event') || 'default'; // Use default if no event specified
+  const eventId = searchParams.get('event'); // Event is now required for proper connections
   
   // Effect to handle connection logic
   useEffect(() => {
@@ -37,9 +37,15 @@ const ConnectPage: React.FC = () => {
       setConnectionId(null);
       
       try {
-        // Validate target user ID
+        // Validate target user ID and event ID
         if (!targetUserId) {
           setError('Invalid connection link. No user specified.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!eventId) {
+          setError('Invalid connection link. No event specified.');
           setLoading(false);
           return;
         }

@@ -33,6 +33,8 @@ import PendingRegistrations from './pages/admin/PendingRegistrations';
 import SystemTestPage from './pages/admin/SystemTestPage';
 import AdminBadges from './pages/admin/Badges';
 import BadgeManager from './pages/admin/BadgeManager';
+import AdGenerator from './pages/admin/AdGenerator';
+import ProfileSyncTools from './pages/admin/ProfileSyncTools';
 import SpeakerDashboard from './pages/SpeakerDashboard';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ConnectPage from './pages/ConnectPage';
@@ -216,6 +218,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminBadges />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/ad-generator" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdGenerator />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/profile-sync" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <ProfileSyncTools />
             </ProtectedRoute>
           } 
         />

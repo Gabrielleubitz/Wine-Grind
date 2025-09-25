@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useRegistration } from '../../hooks/useRegistration';
 import { useAuth } from '../../hooks/useAuth';
 import { EventService } from '../../services/eventService';
+import { QRCodeService } from '../../services/qrCodeService';
 
 interface RegistrationConfirmationModalProps {
   isOpen: boolean;
@@ -76,8 +77,10 @@ const RegistrationStatus: React.FC = () => {
 
   if (!registration) return null;
 
-  // Generate QR code value using document ID
-  const qrCodeValue = `https://winengrind.com/connect?to=${user?.uid}`;
+  // Generate event-specific QR code
+  const qrCodeValue = user?.uid && registration.eventId ? 
+    QRCodeService.generateRegistrationQRUrl(user.uid, registration.eventId) : 
+    `https://winengrind.com/connect?to=${user?.uid}`; // Fallback for legacy data
 
   const downloadQRCode = () => {
     const svg = document.getElementById('qr-code-svg-status');

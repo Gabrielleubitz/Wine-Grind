@@ -9,6 +9,7 @@ import {
   formatText,
   mm 
 } from '../../lib/branding';
+import { QRCodeService } from '../../services/qrCodeService';
 
 interface AttendeeData {
   id: string;
@@ -27,6 +28,7 @@ interface AttendeeData {
 
 interface BadgePreviewProps {
   attendee: AttendeeData;
+  eventId: string;
   className?: string;
   backgroundImageUrl?: string;
   logoUrl?: string;
@@ -36,6 +38,7 @@ interface BadgePreviewProps {
 
 const BadgePreview: React.FC<BadgePreviewProps> = ({ 
   attendee, 
+  eventId,
   className = '', 
   backgroundImageUrl,
   logoUrl,
@@ -73,8 +76,8 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
     linkedinDisplay = `linkedin.com/in/${linkedinDisplay}`;
   }
   
-  // QR Code URL
-  const qrCodeUrl = `https://winengrind.com/connect?to=${attendee.userId}&event=preview`;
+  // Generate event-specific badge QR code
+  const qrCodeUrl = QRCodeService.generateBadgeQRUrl(attendee.userId, eventId);
   
   // Calculate responsive font sizes (approximation for preview) 
   const nameLength = fullName.length;

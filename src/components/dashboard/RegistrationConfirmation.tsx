@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, User, Mail, Phone, Briefcase, Calendar, MapPin, Clock, Download, CalendarPlus } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../../hooks/useAuth';
+import { QRCodeService } from '../../services/qrCodeService';
 
 interface RegistrationConfirmationProps {
   data: {
@@ -10,13 +11,14 @@ interface RegistrationConfirmationProps {
     phone: string;
     work: string;
   };
+  eventId: string;
 }
 
-const RegistrationConfirmation: React.FC<RegistrationConfirmationProps> = ({ data }) => {
+const RegistrationConfirmation: React.FC<RegistrationConfirmationProps> = ({ data, eventId }) => {
   const { user } = useAuth();
   
-  // Generate QR code value using user UID (document ID)
-  const qrCodeValue = `https://winengrind.com/connect?to=${user?.uid}`;
+  // Generate event-specific QR code using QRCodeService
+  const qrCodeValue = user?.uid ? QRCodeService.generateRegistrationQRUrl(user.uid, eventId) : '';
 
   const downloadQRCode = () => {
     const svg = document.getElementById('qr-code-svg');

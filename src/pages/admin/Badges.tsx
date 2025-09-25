@@ -672,6 +672,7 @@ const AdminBadges: React.FC = () => {
                         <>
                           <BadgePreview 
                             attendee={attendees[0]} 
+                            eventId={eventId!}
                             className="transform scale-90 origin-center"
                             backgroundImageUrl={backgroundImageUrl}
                             logoUrl={logoUrl}

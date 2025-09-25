@@ -6,6 +6,7 @@ import {
 } from 'firebase/storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../firebase/config';
+import { ProfileSyncService } from './profileSyncService';
 
 /**
  * Upload a profile picture to Firebase Storage and update Firestore
@@ -35,6 +36,15 @@ export const uploadProfilePicture = async (userId: string, file: File): Promise<
       profileImageUpdatedAt: new Date().toISOString()
     });
     console.log('✅ User document updated with profile image URL');
+    
+    // Sync profile image across all connections and speaker assignments
+    try {
+      await ProfileSyncService.syncUserProfileImage(userId, downloadUrl);
+      console.log('✅ Profile image synced across all data');
+    } catch (syncError) {
+      console.error('⚠️ Profile image uploaded but sync failed:', syncError);
+      // Don't throw here - the main operation succeeded
+    }
     
     return downloadUrl;
   } catch (error) {
@@ -71,6 +81,15 @@ export const deleteProfilePicture = async (userId: string): Promise<void> => {
       profileImageUpdatedAt: new Date().toISOString()
     });
     console.log('✅ User document updated to remove profile image URL');
+    
+    // Sync profile image removal across all connections and speaker assignments
+    try {
+      await ProfileSyncService.syncUserProfileImage(userId, null);
+      console.log('✅ Profile image removal synced across all data');
+    } catch (syncError) {
+      console.error('⚠️ Profile image deleted but sync failed:', syncError);
+      // Don't throw here - the main operation succeeded
+    }
   } catch (error) {
     console.error('❌ Error deleting profile picture:', error);
     throw error;
