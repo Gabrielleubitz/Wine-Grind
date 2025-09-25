@@ -205,7 +205,8 @@ const fitText = (text, maxWidthPt, maxSizePt, minSizePt, estimatedCharWidth = 0.
 // Generate high-quality QR code with proper quiet zone
 const generateQRCode = async (data) => {
   try {
-    return await QRCode.toDataURL(data, {
+    console.log('🔍 Generating QR code for data:', data);
+    const qrCode = await QRCode.toDataURL(data, {
       width: 400, // High resolution for 300 DPI print
       margin: LAYOUT.qr.quietZone, // 4 module quiet zone as specified
       errorCorrectionLevel: PRINT_SPECS.qrErrorCorrection, // H for high error correction
@@ -214,8 +215,10 @@ const generateQRCode = async (data) => {
         light: '#FFFFFF'
       }
     });
+    console.log('✅ QR code generated successfully for:', data);
+    return qrCode;
   } catch (error) {
-    console.error('❌ Error generating QR code:', error);
+    console.error('❌ Error generating QR code for data:', data, 'Error:', error);
     return null;
   }
 };
@@ -932,6 +935,10 @@ const getEventAttendees = async (eventId) => {
       const registration = doc.data();
       const userId = doc.id;
       
+      const qrCodeUrl = registration.qrCodeUrl || registration.ticket_url || `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
+      
+      console.log(`🏷️ Processing attendee ${userId}: QR Code will be:`, qrCodeUrl);
+      
       attendees.push({
         id: userId,
         first_name: registration.name?.split(' ')[0] || 'Guest',
@@ -942,7 +949,7 @@ const getEventAttendees = async (eventId) => {
         ticket_type: registration.ticket_type || '', // For role inference
         tags: registration.tags || [], // For role inference
         badgeRole: registration.badgeRole || '', // Manually assigned badge role
-        qr_code: registration.qrCodeUrl || registration.ticket_url || `https://winengrind.com/connect?to=${userId}&event=${eventId}`,
+        qr_code: qrCodeUrl,
         email: registration.email || ''
       });
     });
