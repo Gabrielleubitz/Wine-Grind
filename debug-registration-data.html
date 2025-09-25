@@ -156,7 +156,7 @@
             resultDiv.innerHTML = 'Loading registration data...';
             
             try {
-                const response = await fetch(`/api/test-qr-data?eventId=${eventId}`);
+                const response = await fetch(`/api/admin-tools?action=test-qr-data&eventId=${eventId}`);
                 const data = await response.json();
                 
                 if (data.success) {

@@ -172,7 +172,7 @@
             resultDiv.innerHTML = 'Checking registration data...';
             
             try {
-                const response = await fetch(`/api/test-qr-data?eventId=${eventId}`);
+                const response = await fetch(`/api/admin-tools?action=test-qr-data&eventId=${eventId}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -252,7 +252,7 @@
             resultDiv.innerHTML = `${dryRun ? 'Running dry run' : 'Cleaning database'}...`;
             
             try {
-                const response = await fetch('/api/cleanup-registration-qr', {
+                const response = await fetch('/api/admin-tools?action=cleanup-qr', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ eventId, dryRun })
