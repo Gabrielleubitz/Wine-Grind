@@ -205,20 +205,18 @@ const fitText = (text, maxWidthPt, maxSizePt, minSizePt, estimatedCharWidth = 0.
 // Generate high-quality QR code with proper quiet zone
 const generateQRCode = async (data) => {
   try {
-    console.log('🔍 QR Code Generation - Input data type:', typeof data);
-    console.log('🔍 QR Code Generation - Input data length:', data?.length);
-    console.log('🔍 QR Code Generation - Input data preview:', data?.substring(0, 100));
-    console.log('🔍 QR Code Generation - Full input data:', data);
+    console.log('🔍 Generating QR code for:', data);
     
-    // Validate that we have a proper URL
+    // Validate that we have data
     if (!data || typeof data !== 'string') {
       console.error('❌ Invalid QR data - not a string:', data);
       return null;
     }
     
+    // Log warning for non-standard URLs but still generate QR code
     if (!data.startsWith('https://winengrind.com/connect')) {
-      console.error('❌ QR data is not a connection URL:', data);
-      return null;
+      console.warn('⚠️ QR data is not a standard connection URL:', data);
+      console.warn('⚠️ Generating QR code anyway - this may need cleanup later');
     }
     
     return await QRCode.toDataURL(data, {
@@ -959,17 +957,27 @@ const getEventAttendees = async (eventId) => {
       console.log(`   - registration.qrCodeUrl: "${registration.qrCodeUrl}"`);
       console.log(`   - registration.ticket_url: "${registration.ticket_url}"`);
       
-      // Generate URL components step by step
-      const fallbackUrl = `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
-      console.log(`   - generated fallback URL: "${fallbackUrl}"`);
+      // Generate proper connection URL
+      const properConnectionUrl = `https://winengrind.com/connect?to=${userId}&event=${eventId}`;
+      console.log(`   - proper connection URL: "${properConnectionUrl}"`);
       
-      // Use the stored connection URL, or fall back to generating it
-      const qrCodeUrl = registration.qrCodeUrl || fallbackUrl;
-      console.log(`   - final qrCodeUrl: "${qrCodeUrl}"`);
+      // Check if stored qrCodeUrl is valid, otherwise use proper connection URL
+      let qrCodeUrl = properConnectionUrl; // Default to proper URL
       
-      // Check if the final URL contains any suspicious data
-      if (qrCodeUrl.includes('sk-') || qrCodeUrl.includes('API_KEY')) {
-        console.error(`🚨 ALERT: QR code contains suspicious data: ${qrCodeUrl}`);
+      if (registration.qrCodeUrl) {
+        if (registration.qrCodeUrl.startsWith('https://winengrind.com/connect') && 
+            !registration.qrCodeUrl.includes('sk-') && 
+            !registration.qrCodeUrl.includes('API_KEY')) {
+          // Use stored URL only if it's a valid connection URL
+          qrCodeUrl = registration.qrCodeUrl;
+          console.log(`   - using stored valid qrCodeUrl: "${qrCodeUrl}"`);
+        } else {
+          // Stored URL is corrupted, use generated proper URL
+          console.log(`   - stored qrCodeUrl is corrupted: "${registration.qrCodeUrl}"`);
+          console.log(`   - using generated proper URL instead: "${qrCodeUrl}"`);
+        }
+      } else {
+        console.log(`   - no stored qrCodeUrl, using generated: "${qrCodeUrl}"`);
       }
       
       attendees.push({
