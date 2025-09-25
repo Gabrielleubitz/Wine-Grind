@@ -17,6 +17,7 @@ interface EnrichedConnection extends Connection {
     email: string;
     profileImage: string | null;
   };
+  allEventIds?: string[]; // For tracking multiple events in "All Events" view
 }
 
 const ConnectionsCard: React.FC = () => {
@@ -138,12 +139,61 @@ const ConnectionsCard: React.FC = () => {
       if (selectedEventId === 'all') {
         // Load all connections
         userConnections = await ConnectionService.getUserConnections(user.uid);
+        
+        // Deduplicate users when showing "All Events"
+        // Keep only the most recent connection with each unique user
+        // But also track all events where they connected
+        const deduplicatedConnections = [];
+        const seenUsers = new Map<string, string[]>(); // userId -> eventIds[]
+        
+        // Sort by timestamp descending (most recent first)
+        userConnections.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+        
+        for (const connection of userConnections) {
+          // Get the partner user ID
+          const partnerUid = connection.fromUid === user.uid ? connection.toUid : connection.fromUid;
+          
+          if (!seenUsers.has(partnerUid)) {
+            // First time seeing this user - add them
+            seenUsers.set(partnerUid, [connection.eventId].filter(Boolean));
+            
+            // Add metadata about all their events for display
+            const connectionWithMeta = {
+              ...connection,
+              allEventIds: [connection.eventId].filter(Boolean)
+            };
+            
+            deduplicatedConnections.push(connectionWithMeta);
+            console.log('✅ Added unique connection with:', partnerUid, 'from event:', connection.eventId);
+          } else {
+            // Already seen this user - just track their event
+            const existingEvents = seenUsers.get(partnerUid) || [];
+            if (connection.eventId && !existingEvents.includes(connection.eventId)) {
+              existingEvents.push(connection.eventId);
+              seenUsers.set(partnerUid, existingEvents);
+              
+              // Update the existing connection's event list
+              const existingConnection = deduplicatedConnections.find(conn => {
+                const existingPartnerUid = conn.fromUid === user.uid ? conn.toUid : conn.fromUid;
+                return existingPartnerUid === partnerUid;
+              });
+              if (existingConnection && existingConnection.allEventIds) {
+                existingConnection.allEventIds = existingEvents;
+              }
+            }
+            console.log('⏭️ Tracked additional event for:', partnerUid, 'event:', connection.eventId);
+          }
+        }
+        
+        userConnections = deduplicatedConnections;
+        console.log('🔄 Deduplicated connections (All Events):', userConnections.length);
       } else {
-        // Load connections for specific event
+        // Load connections for specific event (no deduplication needed)
         userConnections = await ConnectionService.getUserConnectionsByEvent(user.uid, selectedEventId);
+        console.log('🔄 Event-specific connections:', userConnections.length);
       }
       
-      console.log('🔄 Loaded connections:', userConnections);
+      console.log('🔄 Final connections to display:', userConnections);
       
       // Enrich connections with fresh user data if profile image is missing
       const enrichedConnections: EnrichedConnection[] = [];
@@ -384,7 +434,26 @@ const ConnectionsCard: React.FC = () => {
               if (!partner) return null;
               
               const avatarColor = getAvatarColor(partner.name);
-              const eventName = connection.eventId ? getEventName(connection.eventId) : 'Wine & Grind Event';
+              
+              // Handle event name display - show multiple events in "All Events" view
+              let eventName = 'Wine & Grind Event';
+              let eventCount = 1;
+              
+              if (selectedEventId === 'all' && connection.allEventIds && connection.allEventIds.length > 0) {
+                // Show all events this user connected at
+                const eventNames = connection.allEventIds.map(id => getEventName(id)).filter(Boolean);
+                eventCount = eventNames.length;
+                
+                if (eventNames.length === 1) {
+                  eventName = eventNames[0];
+                } else if (eventNames.length === 2) {
+                  eventName = eventNames.join(' & ');
+                } else {
+                  eventName = `${eventNames[0]} & ${eventNames.length - 1} more`;
+                }
+              } else if (connection.eventId) {
+                eventName = getEventName(connection.eventId);
+              }
               
               console.log('🎨 Rendering partner:', partner.name, 'Profile image:', partner.profileImage);
               
@@ -436,6 +505,11 @@ const ConnectionsCard: React.FC = () => {
                     <div className="flex items-center text-xs text-gray-600 mb-2">
                       <Calendar className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
                       <span className="line-clamp-1">{eventName}</span>
+                      {selectedEventId === 'all' && eventCount > 1 && (
+                        <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {eventCount}
+                        </span>
+                      )}
                     </div>
                     
                     <div className="pt-3 border-t border-gray-100 flex flex-col space-y-2">
