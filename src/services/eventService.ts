@@ -354,6 +354,39 @@ export class EventService {
     }
   }
 
+  // Update entire event
+  static async updateEvent(eventId: string, eventData: Partial<Omit<EventData, 'id' | 'createdAt' | 'createdBy'>>): Promise<void> {
+    try {
+      console.log('🔄 Updating event:', eventId, eventData);
+      
+      const docRef = doc(db, 'events', eventId);
+      
+      // If name is being updated, regenerate slug
+      let updateData = { ...eventData };
+      if (eventData.name) {
+        const newSlug = generateSlug(eventData.name);
+        
+        // Get current event to check if slug should be updated
+        const currentEvent = await this.getEventById(eventId);
+        if (currentEvent && currentEvent.slug !== newSlug) {
+          // Ensure new slug is unique
+          const uniqueSlug = await this.ensureUniqueSlug(newSlug);
+          updateData.slug = uniqueSlug;
+          console.log('📝 Updated slug for event:', newSlug, '->', uniqueSlug);
+        }
+      }
+      
+      // Add update timestamp
+      updateData.updatedAt = serverTimestamp();
+      
+      await updateDoc(docRef, updateData);
+      console.log('✅ Event updated successfully:', eventId);
+    } catch (error) {
+      console.error('❌ Error updating event:', error);
+      throw error;
+    }
+  }
+
   // Register user for event
   static async registerForEvent(
     eventId: string, 

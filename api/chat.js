@@ -1,18 +1,41 @@
-const { OpenAI } = require('openai');
-const admin = require('firebase-admin');
+import { OpenAI } from 'openai';
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {
-  const serviceAccountKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountKey),
-    databaseURL: `https://${serviceAccountKey.project_id}-default-rtdb.firebaseio.com`
-  });
+  try {
+    // Try to use service account key from environment variable first
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      const serviceAccountKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountKey),
+        databaseURL: `https://${serviceAccountKey.project_id}-default-rtdb.firebaseio.com`
+      });
+    } else {
+      // Fallback to service account file for development
+      const serviceAccountPath = join(__dirname, '..', 'wine-and-grind-firebase-adminsdk-fbsvc-df3dd963a0.json');
+      const serviceAccountContent = readFileSync(serviceAccountPath, 'utf8');
+      const serviceAccount = JSON.parse(serviceAccountContent);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+      });
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize Firebase Admin:', error);
+    throw new Error('Firebase initialization failed');
+  }
 }
 
 const db = admin.firestore();
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).json({ success: true });
@@ -101,13 +124,28 @@ module.exports = async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
 
-    // Determine appropriate status code
+    // Determine appropriate status code and provide helpful error messages
     let statusCode = 500;
     let errorMessage = 'Internal server error';
 
     if (error.response) {
       statusCode = error.response.status || 500;
       errorMessage = error.response.data?.error?.message || 'OpenAI API error';
+    } else if (error.message.includes('Connection error') || error.message.includes('Could not resolve')) {
+      errorMessage = 'Unable to connect to AI service. Please check your internet connection or try again later.';
+      statusCode = 503; // Service Unavailable
+    }
+
+    // For development, provide a fallback response when OpenAI is unavailable
+    if (process.env.NODE_ENV !== 'production' && error.message.includes('Connection error')) {
+      console.log('🔧 Development mode: Providing fallback response for OpenAI connectivity issue');
+      return res.status(200).json({ 
+        success: true,
+        response: "Hi there! I'm your Wine & Grind assistant. I'm currently experiencing some connectivity issues with my AI service, but I'm here to help! What would you like to know about our exclusive networking events? You can ask me about upcoming events, event details, registration, or anything else about Wine & Grind.",
+        usage: { total_tokens: 0 },
+        model: 'fallback',
+        timestamp: new Date().toISOString()
+      });
     }
 
     return res.status(statusCode).json({ 

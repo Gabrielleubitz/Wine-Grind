@@ -42,25 +42,25 @@ export default defineConfig({
       'node-mailjet': 'empty-module'
     }
   },
-  // Add proxy for Netlify functions with better error handling
+  // Add proxy for API routes (Vercel-compatible development)
   server: {
     port: 5173,
     proxy: {
-      '/.netlify/functions': {
-        target: 'http://localhost:8888',
+      '/api': {
+        target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
         timeout: 30000,
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
-            console.log('Proxy error:', err.message);
+            console.log('API proxy error:', err.message);
             if (!res.headersSent) {
               res.writeHead(500, {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
               });
               res.end(JSON.stringify({ 
-                error: 'Netlify functions server not available. Make sure to run: npm run dev' 
+                error: 'Development API server not available. Make sure to run: npm run dev:api' 
               }));
             }
           });

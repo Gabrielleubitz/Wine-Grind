@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Calendar, MapPin, Users, Edit, Eye, Trash2, AlertTriangle, X, Mail, Phone, Briefcase, Download, Linkedin, ChevronDown } from 'lucide-react';
+import { Plus, Calendar, MapPin, Users, Edit, Eye, Trash2, AlertTriangle, X, Mail, Phone, Briefcase, Download, Linkedin, ChevronDown, ArrowLeft } from 'lucide-react';
 import { EventService, EventData } from '../../services/eventService';
 import AdminHeader from '../../components/admin/AdminHeader';
 import EventPositionChart from '../../components/analytics/EventPositionChart';
@@ -284,6 +284,17 @@ const EventManagement: React.FC = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back Button */}
+        <div className="mb-8">
+          <Link
+            to="/admin-tools"
+            className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Admin Tools</span>
+          </Link>
+        </div>
+
         {/* Header with Create Button */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -385,6 +396,13 @@ const EventManagement: React.FC = () => {
                     >
                       <Eye className="h-4 w-4" />
                       <span>View</span>
+                    </Link>
+                    <Link
+                      to={`/admin/events/${event.id}/edit`}
+                      className="flex-1 bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors duration-200 font-medium text-center flex items-center justify-center space-x-2 text-sm"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span>Edit</span>
                     </Link>
                     <button 
                       className="flex-1 bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors duration-200 font-medium flex items-center justify-center space-x-2 text-sm"

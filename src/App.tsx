@@ -26,6 +26,7 @@ import AdminTools from './pages/AdminTools';
 import AdminSMS from './pages/admin/AdminSMS';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AddEvent from './pages/admin/AddEvent';
+import EditEvent from './pages/admin/EditEvent';
 import EventManagement from './pages/admin/EventManagement';
 import SpeakerManagement from './pages/admin/SpeakerManagement';
 import UserManagement from './pages/admin/UserManagement';
@@ -158,6 +159,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AddEvent />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/events/:eventId/edit" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <EditEvent />
             </ProtectedRoute>
           } 
         />

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Image, FileText, Save, ArrowLeft, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Calendar, MapPin, Image, FileText, Save, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { EventService, generateSlug } from '../../services/eventService';
+import { EventService, EventData, generateSlug } from '../../services/eventService';
 import AdminHeader from '../../components/admin/AdminHeader';
 
-const AddEvent: React.FC = () => {
+const EditEvent: React.FC = () => {
   const navigate = useNavigate();
+  const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
   
+  const [originalEvent, setOriginalEvent] = useState<EventData | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -18,10 +20,58 @@ const AddEvent: React.FC = () => {
     status: 'active' as const
   });
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [previewSlug, setPreviewSlug] = useState('');
+
+  // Load event data on component mount
+  useEffect(() => {
+    if (eventId) {
+      loadEvent();
+    }
+  }, [eventId]);
+
+  const loadEvent = async () => {
+    if (!eventId) {
+      setError('Event ID is required');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const event = await EventService.getEventById(eventId);
+      
+      if (!event) {
+        setError('Event not found');
+        return;
+      }
+
+      setOriginalEvent(event);
+      
+      // Convert date to datetime-local format
+      const dateForInput = new Date(event.date).toISOString().slice(0, 16);
+      
+      setFormData({
+        name: event.name,
+        location: event.location,
+        date: dateForInput,
+        description: event.description,
+        imageUrl: event.imageUrl,
+        status: event.status
+      });
+      
+      setPreviewSlug(event.slug);
+      
+    } catch (err: any) {
+      console.error('❌ Error loading event:', err);
+      setError(err.message || 'Failed to load event');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,11 +111,31 @@ const AddEvent: React.FC = () => {
     return true;
   };
 
+  const hasChanges = (): boolean => {
+    if (!originalEvent) return true;
+    
+    const originalDateForInput = new Date(originalEvent.date).toISOString().slice(0, 16);
+    
+    return (
+      formData.name !== originalEvent.name ||
+      formData.location !== originalEvent.location ||
+      formData.date !== originalDateForInput ||
+      formData.description !== originalEvent.description ||
+      formData.imageUrl !== originalEvent.imageUrl ||
+      formData.status !== originalEvent.status
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user?.uid) {
-      setError('You must be logged in to create events');
+      setError('You must be logged in to edit events');
+      return;
+    }
+
+    if (!eventId) {
+      setError('Event ID is required');
       return;
     }
 
@@ -73,24 +143,25 @@ const AddEvent: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    if (!hasChanges()) {
+      setError('No changes detected');
+      return;
+    }
+
+    setSaving(true);
     setError(null);
 
     try {
-      const eventId = await EventService.createEvent(formData, user.uid);
-      
-      setSuccess(`Event "${formData.name}" created successfully with slug: ${previewSlug}`);
-      
-      // Clear form
-      setFormData({
-        name: '',
-        location: '',
-        date: '',
-        description: '',
-        imageUrl: '',
-        status: 'active'
+      await EventService.updateEvent(eventId, {
+        name: formData.name,
+        location: formData.location,
+        date: formData.date,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+        status: formData.status
       });
-      setPreviewSlug('');
+      
+      setSuccess(`Event "${formData.name}" updated successfully!`);
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -98,10 +169,10 @@ const AddEvent: React.FC = () => {
       }, 2000);
 
     } catch (err: any) {
-      console.error('❌ Error creating event:', err);
-      setError(err.message || 'Failed to create event. Please try again.');
+      console.error('❌ Error updating event:', err);
+      setError(err.message || 'Failed to update event. Please try again.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -112,11 +183,59 @@ const AddEvent: React.FC = () => {
     { value: 'completed', label: 'Completed - Show publicly, disable registration' }
   ];
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <AdminHeader 
+          title="Edit Event" 
+          subtitle="Loading event details..."
+        />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+              <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">Loading Event</h1>
+            <p className="text-gray-600">Please wait while we load the event details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !originalEvent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <AdminHeader 
+          title="Edit Event" 
+          subtitle="Unable to load event"
+        />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Event</h1>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => navigate('/admin/events')}
+              className="bg-gray-100 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-200 transition-colors duration-200 font-medium"
+            >
+              Back to Events
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <AdminHeader 
-        title="Create New Event" 
-        subtitle="Add a new Wine & Grind event to the system"
+        title="Edit Event" 
+        subtitle={`Editing "${originalEvent?.name}"`}
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -137,11 +256,16 @@ const AddEvent: React.FC = () => {
               <Calendar className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Create New Event
+              Edit Event
             </h1>
             <p className="text-gray-600">
-              Fill in the details below to create a new Wine & Grind event
+              Update the details of your Wine & Grind event
             </p>
+            {!hasChanges() && (
+              <p className="text-sm text-gray-500 mt-2">
+                Make changes to update the event
+              </p>
+            )}
           </div>
 
           {/* Error Message */}
@@ -188,6 +312,11 @@ const AddEvent: React.FC = () => {
                   <div className="text-sm text-blue-600 font-mono">
                     winengrind.com/events/{previewSlug}
                   </div>
+                  {originalEvent?.slug !== previewSlug && (
+                    <div className="text-xs text-blue-700 mt-1">
+                      URL will change from: /events/{originalEvent?.slug}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -301,22 +430,29 @@ const AddEvent: React.FC = () => {
               </select>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-center pt-6">
+            {/* Submit Buttons */}
+            <div className="flex justify-center space-x-4 pt-6">
+              <button
+                type="button"
+                onClick={() => navigate('/admin/events')}
+                className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl hover:bg-gray-200 transition-colors duration-200 font-semibold"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={saving || !hasChanges()}
                 className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {loading ? (
+                {saving ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Creating Event...</span>
+                    <span>Saving Changes...</span>
                   </>
                 ) : (
                   <>
                     <Save className="h-5 w-5" />
-                    <span>Create Event</span>
+                    <span>Save Changes</span>
                   </>
                 )}
               </button>
@@ -328,4 +464,4 @@ const AddEvent: React.FC = () => {
   );
 };
 
-export default AddEvent;
+export default EditEvent;
