@@ -315,12 +315,25 @@ const AdminTools: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <AdminHeader 
         title="Admin Dashboard" 
-        subtitle={`Welcome, ${user?.displayName || user?.email}! Manage events, registrations, and check-ins.`}
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
         {/* Welcome Section */}
         <div className="text-center mb-8 sm:mb-12 px-2">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 sm:p-8 mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-purple-100 p-3 rounded-full mr-4">
+                <UserCog className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  Welcome back, <span className="text-purple-600">{user?.displayName?.split(' ')[0] || 'Admin'}</span>! 👋
+                </h2>
+                <p className="text-gray-600 mt-1">Manage events, track registrations, and oversee check-ins</p>
+              </div>
+            </div>
+          </div>
+          
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
             Admin <span className="gradient-text">Dashboard</span>
           </h1>
