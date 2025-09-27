@@ -223,13 +223,21 @@ export class EventService {
         where('status', 'in', ['active', 'sold-out', 'completed'])
       );
       
-      console.log('📊 Executing Firestore query...');
+      console.log('📊 Executing Firestore query for public events...');
       const snapshot = await getDocs(q);
       
-      const events = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as EventData[];
+      console.log(`📋 Raw Firestore results: ${snapshot.docs.length} documents`);
+      
+      const events = snapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log(`🔍 Raw document: ${doc.id} - Status: "${data.status}" - Name: "${data.name}"`);
+        return {
+          id: doc.id,
+          ...data
+        };
+      }) as EventData[];
+      
+      console.log(`✅ Processed ${events.length} public events with statuses:`, events.map(e => `${e.name}: ${e.status}`));
 
       // Add slugs to events that don't have them
       const eventsNeedingSlugs = events.filter(event => !event.slug);
