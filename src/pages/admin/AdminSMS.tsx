@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Send, Users, AlertCircle, CheckCircle, ArrowLeft, Calendar, ChevronDown } from 'lucide-react';
+import { MessageSquare, Send, Users, AlertCircle, CheckCircle, ArrowLeft, Calendar, ChevronDown, User, Search, X } from 'lucide-react';
 import { EventService, EventData } from '../../services/eventService';
 import { useAuth } from '../../hooks/useAuth';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -24,7 +24,7 @@ const AdminSMS: React.FC = () => {
   
   const [events, setEvents] = useState<EventData[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
-  const [recipientGroup, setRecipientGroup] = useState<'all' | 'registered' | 'pending' | 'speaker'>('all');
+  const [recipientGroup, setRecipientGroup] = useState<'all' | 'registered' | 'pending' | 'speaker' | 'custom'>('all');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -36,16 +36,23 @@ const AdminSMS: React.FC = () => {
     sent: number;
     failed: number;
   } | null>(null);
+  
+  // User selection states
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showUserSelection, setShowUserSelection] = useState(false);
 
   useEffect(() => {
     loadEvents();
   }, []);
 
   useEffect(() => {
-    if (selectedEventId && recipientGroup) {
+    if (selectedEventId) {
+      loadUsersForEvent();
       updateRecipientCount();
     }
-  }, [selectedEventId, recipientGroup]);
+  }, [selectedEventId, recipientGroup, selectedUsers]);
 
   const loadEvents = async () => {
     try {
@@ -64,6 +71,25 @@ const AdminSMS: React.FC = () => {
     }
   };
 
+  const loadUsersForEvent = async () => {
+    if (!selectedEventId) {
+      setAllUsers([]);
+      return;
+    }
+
+    try {
+      const registrations = await EventService.getEventRegistrations(selectedEventId);
+      setAllUsers(registrations);
+      
+      // Reset user selection when changing events
+      setSelectedUsers(new Set());
+      setShowUserSelection(false);
+    } catch (error) {
+      console.error('❌ Error loading users:', error);
+      setAllUsers([]);
+    }
+  };
+
   const updateRecipientCount = async () => {
     if (!selectedEventId) {
       setRecipientCount(0);
@@ -71,34 +97,41 @@ const AdminSMS: React.FC = () => {
     }
 
     try {
-      // Get all registrations for the event
-      const registrations = await EventService.getEventRegistrations(selectedEventId);
-      
-      // Get event details to access speakers array
-      const eventDetails = await EventService.getEventById(selectedEventId);
-      const eventSpeakers = eventDetails?.speakers || [];
-      
-      console.log('📊 Event speakers:', eventSpeakers);
-      
-      let filteredUsers = registrations;
+      let filteredUsers = [];
 
-      switch (recipientGroup) {
-        case 'all':
-          filteredUsers = registrations;
-          break;
-        case 'registered':
-          filteredUsers = registrations.filter(reg => !reg.checkedIn);
-          break;
-        case 'pending':
-          filteredUsers = registrations.filter(reg => reg.status === 'pending');
-          break;
-        case 'speaker':
-          // Filter registrations to only include users who are in the event's speakers array
-          filteredUsers = registrations.filter(reg => 
-            eventSpeakers.some((speaker: any) => speaker.userId === reg.userId)
-          );
-          console.log('🎯 Filtered speaker registrations:', filteredUsers);
-          break;
+      if (recipientGroup === 'custom') {
+        // Use selected users
+        filteredUsers = allUsers.filter(user => selectedUsers.has(user.userId || user.id));
+      } else {
+        // Get all registrations for the event
+        const registrations = await EventService.getEventRegistrations(selectedEventId);
+        
+        // Get event details to access speakers array
+        const eventDetails = await EventService.getEventById(selectedEventId);
+        const eventSpeakers = eventDetails?.speakers || [];
+        
+        console.log('📊 Event speakers:', eventSpeakers);
+        
+        filteredUsers = registrations;
+
+        switch (recipientGroup) {
+          case 'all':
+            filteredUsers = registrations;
+            break;
+          case 'registered':
+            filteredUsers = registrations.filter(reg => !reg.checkedIn);
+            break;
+          case 'pending':
+            filteredUsers = registrations.filter(reg => reg.status === 'pending');
+            break;
+          case 'speaker':
+            // Filter registrations to only include users who are in the event's speakers array
+            filteredUsers = registrations.filter(reg => 
+              eventSpeakers.some((speaker: any) => speaker.userId === reg.userId)
+            );
+            console.log('🎯 Filtered speaker registrations:', filteredUsers);
+            break;
+        }
       }
 
       // Filter out users without phone numbers
@@ -143,31 +176,38 @@ const AdminSMS: React.FC = () => {
     setSendingProgress({ total: recipientCount, sent: 0, failed: 0 });
 
     try {
-      // Get event details to access speakers array
-      const eventDetails = await EventService.getEventById(selectedEventId);
-      const eventSpeakers = eventDetails?.speakers || [];
-      
-      // Get registrations for the selected event
-      const registrations = await EventService.getEventRegistrations(selectedEventId);
-      let filteredUsers = registrations;
+      let filteredUsers = [];
 
-      // Filter based on recipient group
-      switch (recipientGroup) {
-        case 'all':
-          filteredUsers = registrations;
-          break;
-        case 'registered':
-          filteredUsers = registrations.filter(reg => !reg.checkedIn);
-          break;
-        case 'pending':
-          filteredUsers = registrations.filter(reg => reg.status === 'pending');
-          break;
-        case 'speaker':
-          // Filter to only include users who are in the event's speakers array
-          filteredUsers = registrations.filter(reg => 
-            eventSpeakers.some((speaker: any) => speaker.userId === reg.userId)
-          );
-          break;
+      if (recipientGroup === 'custom') {
+        // Use selected users
+        filteredUsers = allUsers.filter(user => selectedUsers.has(user.userId || user.id));
+      } else {
+        // Get event details to access speakers array
+        const eventDetails = await EventService.getEventById(selectedEventId);
+        const eventSpeakers = eventDetails?.speakers || [];
+        
+        // Get registrations for the selected event
+        const registrations = await EventService.getEventRegistrations(selectedEventId);
+        filteredUsers = registrations;
+
+        // Filter based on recipient group
+        switch (recipientGroup) {
+          case 'all':
+            filteredUsers = registrations;
+            break;
+          case 'registered':
+            filteredUsers = registrations.filter(reg => !reg.checkedIn);
+            break;
+          case 'pending':
+            filteredUsers = registrations.filter(reg => reg.status === 'pending');
+            break;
+          case 'speaker':
+            // Filter to only include users who are in the event's speakers array
+            filteredUsers = registrations.filter(reg => 
+              eventSpeakers.some((speaker: any) => speaker.userId === reg.userId)
+            );
+            break;
+        }
       }
 
       // Filter out users without phone numbers and deduplicate
@@ -379,10 +419,38 @@ const AdminSMS: React.FC = () => {
       all: 'All Users',
       registered: 'Registered (Not Checked In)',
       pending: 'Pending Users',
-      speaker: 'Speakers'
+      speaker: 'Speakers',
+      custom: 'Custom Selection'
     };
     return labels[group as keyof typeof labels] || group;
   };
+
+  // User selection helper functions
+  const toggleUserSelection = (userId: string) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const selectAllUsers = () => {
+    const usersWithPhones = allUsers.filter(user => user.phone && user.phone.trim());
+    const allUserIds = usersWithPhones.map(user => user.userId || user.id);
+    setSelectedUsers(new Set(allUserIds));
+  };
+
+  const clearUserSelection = () => {
+    setSelectedUsers(new Set());
+  };
+
+  const filteredUsers = allUsers.filter(user => 
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.phone?.includes(searchTerm)
+  );
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -521,13 +589,121 @@ const AdminSMS: React.FC = () => {
                   <option value="registered">Registered (Not Checked In)</option>
                   <option value="pending">Pending Users</option>
                   <option value="speaker">Speakers</option>
+                  <option value="custom">Custom Selection</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
               <div className="mt-2 text-sm text-gray-600">
                 📊 {recipientCount} recipients will receive this message
               </div>
+              
+              {/* Custom Selection Button */}
+              {recipientGroup === 'custom' && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowUserSelection(!showUserSelection)}
+                    className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors duration-200 flex items-center space-x-2"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{showUserSelection ? 'Hide' : 'Show'} User Selection</span>
+                    <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs">
+                      {selectedUsers.size} selected
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* User Selection Interface */}
+            {recipientGroup === 'custom' && showUserSelection && (
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Select Recipients</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={selectAllUsers}
+                      className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors"
+                    >
+                      Select All ({allUsers.filter(u => u.phone?.trim()).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearUserSelection}
+                      className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or phone..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Users List */}
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {filteredUsers.map(user => {
+                    const userId = user.userId || user.id;
+                    const isSelected = selectedUsers.has(userId);
+                    const hasPhone = user.phone && user.phone.trim();
+
+                    return (
+                      <div
+                        key={userId}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          isSelected 
+                            ? 'bg-blue-50 border-blue-200' 
+                            : hasPhone 
+                              ? 'bg-white border-gray-200 hover:bg-gray-50' 
+                              : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                        }`}
+                        onClick={() => hasPhone && toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => hasPhone && toggleUserSelection(userId)}
+                          disabled={!hasPhone}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-600">{user.email}</div>
+                          <div className="text-sm text-gray-500">
+                            {user.phone || '❌ No phone number'}
+                          </div>
+                        </div>
+                        {!hasPhone && (
+                          <div className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                            No SMS
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  
+                  {filteredUsers.length === 0 && (
+                    <div className="text-center text-gray-500 py-8">
+                      No users found matching your search.
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-sm text-gray-600">
+                  {selectedUsers.size} users selected • {allUsers.filter(u => u.phone?.trim()).length} users have phone numbers
+                </div>
+              </div>
+            )}
 
             {/* Message Input */}
             <div>
