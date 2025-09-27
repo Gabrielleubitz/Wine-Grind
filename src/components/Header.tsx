@@ -69,6 +69,29 @@ const SpeakerAwareHeader: React.FC = () => {
     setShowMobileMenu(false);
   }, [location.pathname]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      const mobileContainer = target.closest('.mobile-menu-container');
+      
+      // Close profile menu if clicking outside
+      if (showProfileMenu && !target.closest('[data-profile-dropdown]')) {
+        setShowProfileMenu(false);
+      }
+      
+      // Close mobile menu if clicking outside
+      if (!mobileContainer && showMobileMenu) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    if (showProfileMenu || showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showProfileMenu, showMobileMenu]);
+
   const handleNavigation = (path: string) => {
     navigate(path);
     setShowProfileMenu(false);
@@ -116,7 +139,7 @@ const SpeakerAwareHeader: React.FC = () => {
   // If user is pending, don't render navigation options that would lead to protected routes
   if (user && isPending) {
     return (
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -149,7 +172,7 @@ const SpeakerAwareHeader: React.FC = () => {
   // Don't render anything if no user (not authenticated)
   if (!user) {
     return (
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -212,9 +235,9 @@ const SpeakerAwareHeader: React.FC = () => {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 z-[200]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
+        <div className="flex items-center justify-between py-4 overflow-visible">
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <button 
@@ -229,7 +252,7 @@ const SpeakerAwareHeader: React.FC = () => {
             </button>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Center */}
           <nav className="hidden md:flex items-center space-x-8">
             {/* Regular Navigation Items */}
             <button 
@@ -288,9 +311,11 @@ const SpeakerAwareHeader: React.FC = () => {
                 <span>Admin</span>
               </button>
             )}
+          </nav>
 
-            {/* Profile Dropdown */}
-            <div className="relative">
+          {/* Profile Dropdown - Right side */}
+          <div className="flex items-center space-x-4">
+            <div className="relative" data-profile-dropdown>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -313,51 +338,32 @@ const SpeakerAwareHeader: React.FC = () => {
                 <span className="font-medium text-sm sm:text-base hidden sm:inline">
                   {user?.displayName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}
                 </span>
-                <ChevronDown className="h-4 w-4" />
               </button>
 
-              {/* Profile Dropdown Menu */}
+              {/* New Simple Dropdown Menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                  {/* User Info */}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999]">
+                  {/* User Info Header */}
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          {user.profileImage ? (
-                            <img 
-                              src={user.profileImage} 
-                              alt={user.displayName || 'User'} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzlDQTNBRiIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTQwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-red-500 to-blue-500 flex items-center justify-center text-white font-bold">
-                              {user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Quick upload overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                          <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full"></div>
-                          <ProfilePictureUploader
-                            currentImageUrl={user.profileImage || null}
-                            onUploadSuccess={handleProfilePictureSuccess}
-                            onUploadError={handleProfilePictureError}
-                            size="sm"
-                            showButtons={false}
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        {user.profileImage ? (
+                          <img 
+                            src={user.profileImage} 
+                            alt={user.displayName || 'User'} 
+                            className="w-full h-full object-cover"
                           />
-                        </div>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-red-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                            {user?.displayName?.charAt(0) || user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">
                           {user?.displayName || user?.name || 'User'}
                         </div>
-                        <div className="text-sm text-gray-600">{user?.email}</div>
+                        <div className="text-sm text-gray-500">{user?.email}</div>
                         {/* Role Badges */}
                         <div className="flex flex-wrap gap-1 mt-1">
                           {isAdmin && (
@@ -381,28 +387,14 @@ const SpeakerAwareHeader: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Profile picture upload error */}
-                    {imageUploadError && (
-                      <div className="mt-2 text-xs text-red-600">
-                        {imageUploadError}
-                      </div>
-                    )}
                   </div>
 
                   {/* Menu Items */}
-                  <div className="py-1">
+                  <div className="py-2">
                     <button
                       onClick={() => {
                         navigate('/dashboard');
-                        // Find the edit profile button and click it
-                        setTimeout(() => {
-                          const editProfileButton = document.querySelector('button[aria-label="Edit Profile"]') || 
-                                                   document.querySelector('button:has(.edit-profile-icon)');
-                          if (editProfileButton) {
-                            (editProfileButton as HTMLButtonElement).click();
-                          }
-                        }, 500);
+                        setShowProfileMenu(false);
                       }}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -411,7 +403,10 @@ const SpeakerAwareHeader: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={() => handleNavigation('/dashboard')}
+                      onClick={() => {
+                        navigate('/dashboard');
+                        setShowProfileMenu(false);
+                      }}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Calendar className="h-4 w-4" />
@@ -419,17 +414,22 @@ const SpeakerAwareHeader: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={() => handleNavigation('/events')}
+                      onClick={() => {
+                        navigate('/events');
+                        setShowProfileMenu(false);
+                      }}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Calendar className="h-4 w-4" />
                       <span>Browse Events</span>
                     </button>
 
-                    {/* Speaker-specific menu item */}
                     {isSpeaker && (
                       <button
-                        onClick={() => handleNavigation('/speaker-dashboard')}
+                        onClick={() => {
+                          navigate('/speaker-dashboard');
+                          setShowProfileMenu(false);
+                        }}
                         className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors"
                       >
                         <Mic className="h-4 w-4" />
@@ -437,29 +437,27 @@ const SpeakerAwareHeader: React.FC = () => {
                       </button>
                     )}
 
-                    {/* Admin-specific menu item */}
                     {isAdmin && (
                       <button
-                        onClick={() => handleNavigation('/admin-tools')}
+                        onClick={() => {
+                          navigate('/admin-tools');
+                          setShowProfileMenu(false);
+                        }}
                         className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
                       >
                         <Shield className="h-4 w-4" />
                         <span>Admin Panel</span>
                       </button>
                     )}
-
-                    <button
-                      onClick={() => handleNavigation('/dashboard')}
-                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </button>
                   </div>
 
-                  <div className="border-t border-gray-100 py-1">
+                  {/* Logout */}
+                  <div className="border-t border-gray-100 py-2">
                     <button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        setShowProfileMenu(false);
+                      }}
                       className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
@@ -469,21 +467,23 @@ const SpeakerAwareHeader: React.FC = () => {
                 </div>
               )}
             </div>
-          </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            aria-label="Toggle mobile menu"
-          >
-            {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
-          </button>
+            {/* Mobile Menu Button */}
+            <div className="mobile-menu-container">
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                aria-label="Toggle mobile menu"
+              >
+                {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden border-t border-gray-200 py-4 mobile-menu-container">
             <div className="space-y-2">
               <button 
                 onClick={() => handleNavigation('/dashboard')}

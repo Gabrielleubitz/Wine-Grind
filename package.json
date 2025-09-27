@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others \"npm run dev:vite\" \"npm run dev:api\"",
+    "dev": "concurrently --kill-others-on-fail \"npm run dev:vite\" \"npm run dev:api\"",
     "dev:vite": "vite --force --port 5173",
     "dev:api": "node dev-server.js",
     "dev:all": "concurrently --kill-others \"npm run dev:vite\" \"npm run dev:netlify\"",

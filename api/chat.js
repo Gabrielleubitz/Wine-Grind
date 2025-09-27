@@ -29,7 +29,9 @@ if (!admin.apps.length) {
     }
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin:', error);
-    throw new Error('Firebase initialization failed');
+    console.error('Error details:', error.message);
+    // Don't throw error to prevent server crash during development
+    console.log('⚠️ Continuing without Firebase Admin initialization for development...');
   }
 }
 

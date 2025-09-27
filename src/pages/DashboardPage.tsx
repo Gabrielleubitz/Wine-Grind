@@ -158,7 +158,9 @@ const EventsPage: React.FC = () => {
   const loadPublicEvents = async () => {
     try {
       const eventsData = await EventService.getPublicEvents();
-      setEvents(eventsData);
+      // Filter out inactive events
+      const activeEvents = eventsData.filter(event => event.status !== 'inactive');
+      setEvents(activeEvents);
     } catch (error) {
       console.error('❌ Error loading events:', error);
     } finally {
@@ -880,10 +882,13 @@ const EventsPage: React.FC = () => {
               </div>
             ) : userRegistrations.length > 0 ? (
               <div className="grid lg:grid-cols-2 gap-8 mb-16">
-                {userRegistrations.map((registration, index) => (
+                {userRegistrations.map((registration, index) => {
+                  const isExpired = !isUpcoming(registration.eventDate);
+                  
+                  return (
                   <div
                     key={registration.eventId}
-                    className={`bg-gradient-to-br from-red-700 to-blue-600 rounded-3xl p-8 text-white relative overflow-hidden slide-up`}
+                    className={`${isExpired ? 'bg-gradient-to-br from-gray-500 to-gray-600' : 'bg-gradient-to-br from-red-700 to-blue-600'} rounded-3xl p-8 text-white relative overflow-hidden slide-up`}
                     style={{ animationDelay: `${index * 0.2}s` }}
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -893,7 +898,7 @@ const EventsPage: React.FC = () => {
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-2">
                           <Ticket className="h-6 w-6" />
-                          <span className="font-semibold">Digital Ticket</span>
+                          <span className="font-semibold">{isExpired ? 'Expired Ticket' : 'Digital Ticket'}</span>
                         </div>
                         <div className="text-sm opacity-90">
                           #{registration.qrCodeUrl?.slice(-8).toUpperCase() || 'TICKET'}
@@ -941,12 +946,13 @@ const EventsPage: React.FC = () => {
                       
                       <div className="mt-6 text-center">
                         <p className="text-sm opacity-90">
-                          Present this ticket at the event entrance
+                          {isExpired ? 'This ticket has expired' : 'Present this ticket at the event entrance'}
                         </p>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center mb-16">

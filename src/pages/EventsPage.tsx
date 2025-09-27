@@ -23,8 +23,9 @@ const EventsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const eventsData = await EventService.getAllEvents();
-      // Sort events by date (newest first)
+      // Use getPublicEvents to only get active, sold-out, and completed events
+      const eventsData = await EventService.getPublicEvents();
+      // Sort by date (newest first)
       const sortedEvents = eventsData.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
@@ -38,6 +39,25 @@ const EventsPage: React.FC = () => {
   };
 
   const getEventStatus = (event: EventData): 'active' | 'past' | 'completed' => {
+    // First check the database status
+    if (event.status === 'completed') {
+      return 'completed';
+    }
+    
+    if (event.status === 'sold-out') {
+      const eventDate = new Date(event.date);
+      const now = new Date();
+      const eventEndTime = new Date(eventDate);
+      eventEndTime.setHours(eventEndTime.getHours() + 4); // Assume 4-hour events
+      
+      if (now > eventEndTime) {
+        return 'completed'; // Past sold-out event
+      } else {
+        return 'active'; // Future sold-out event
+      }
+    }
+    
+    // For 'active' status, determine based on date
     const eventDate = new Date(event.date);
     const now = new Date();
     const eventEndTime = new Date(eventDate);
@@ -57,15 +77,15 @@ const EventsPage: React.FC = () => {
     return getEventStatus(event) === filter;
   });
 
-  const getStatusBadge = (status: 'active' | 'past' | 'completed') => {
+  const getStatusBadge = (event: EventData, status: 'active' | 'past' | 'completed') => {
     const styles = {
-      active: 'bg-green-100 text-green-800',
+      active: event.status === 'sold-out' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800',
       past: 'bg-yellow-100 text-yellow-800',
       completed: 'bg-blue-100 text-blue-800'
     };
     
     const labels = {
-      active: 'Upcoming',
+      active: event.status === 'sold-out' ? 'Sold Out' : 'Upcoming',
       past: 'Recent',
       completed: 'Completed'
     };
@@ -203,7 +223,7 @@ const EventsPage: React.FC = () => {
                         }}
                       />
                       <div className="absolute top-4 right-4">
-                        {getStatusBadge(status)}
+                        {getStatusBadge(event, status)}
                       </div>
                     </div>
 
