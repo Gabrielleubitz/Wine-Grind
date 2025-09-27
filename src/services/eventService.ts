@@ -218,10 +218,12 @@ export class EventService {
       const eventsRef = collection(db, 'events');
       
       // Query for public events (active, sold-out, completed)
+      console.log('🔍 Creating Firestore query with WHERE status IN:', ['active', 'sold-out', 'completed']);
       const q = query(
         eventsRef,
         where('status', 'in', ['active', 'sold-out', 'completed'])
       );
+      console.log('✅ Firestore query created');
       
       console.log('📊 Executing Firestore query for public events...');
       const snapshot = await getDocs(q);
@@ -350,12 +352,20 @@ export class EventService {
   // Update event status
   static async updateEventStatus(eventId: string, status: EventData['status']): Promise<void> {
     try {
+      console.log(`🔄 UPDATING EVENT STATUS: ${eventId} -> "${status}"`);
       const docRef = doc(db, 'events', eventId);
       await updateDoc(docRef, { 
         status,
         updatedAt: serverTimestamp()
       });
-      console.log('✅ Event status updated:', eventId, status);
+      console.log(`✅ Event status updated successfully: ${eventId} -> "${status}"`);
+      
+      // Verify the update by reading it back
+      const updatedDoc = await getDoc(docRef);
+      if (updatedDoc.exists()) {
+        const updatedData = updatedDoc.data();
+        console.log(`🔍 Verification - Event ${eventId} now has status: "${updatedData.status}"`);
+      }
     } catch (error) {
       console.error('❌ Error updating event status:', error);
       throw error;
