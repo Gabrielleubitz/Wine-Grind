@@ -107,22 +107,6 @@ const SpeakerAwareHeader: React.FC = () => {
     }
   };
 
-  // Function to handle Events button click
-  const handleEventsClick = () => {
-    if (location.pathname === '/') {
-      // If on homepage, scroll to events section
-      const eventsSection = document.getElementById('events');
-      if (eventsSection) {
-        eventsSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else if (location.pathname.includes('/events')) {
-      // If on events page or dashboard, scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      // If on another page, navigate to events page
-      navigate('/events');
-    }
-  };
 
   // Handle profile picture upload success
   const handleProfilePictureSuccess = (imageUrl: string) => {
@@ -189,7 +173,7 @@ const SpeakerAwareHeader: React.FC = () => {
             </div>
             <nav className="hidden md:flex space-x-8">
               <button 
-                onClick={handleEventsClick}
+                onClick={() => navigate('/events')}
                 className="text-gray-600 hover:text-red-600 font-medium transition-colors"
               >
                 Events
@@ -216,7 +200,7 @@ const SpeakerAwareHeader: React.FC = () => {
           {showMobileMenu && (
             <div className="md:hidden py-4 border-t border-gray-200">
               <button 
-                onClick={handleEventsClick}
+                onClick={() => navigate('/events')}
                 className="block w-full text-left px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 Events
