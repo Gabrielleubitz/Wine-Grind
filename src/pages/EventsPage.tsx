@@ -16,15 +16,19 @@ const EventsPage: React.FC = () => {
   const [filter, setFilter] = useState<EventFilter>('all');
 
   useEffect(() => {
+    console.log('🚀 EventsPage useEffect - Starting to load events...');
     loadEvents();
   }, []);
 
   const loadEvents = async () => {
+    console.log('🎯 EventsPage.loadEvents() - STARTING...');
     try {
       setLoading(true);
       setError(null);
+      console.log('📞 EventsPage - About to call EventService.getPublicEvents()...');
       // Use getPublicEvents to only get active, sold-out, and completed events
       const eventsData = await EventService.getPublicEvents();
+      console.log('📦 EventsPage - Received eventsData:', eventsData);
       
       // DEBUG: Log what events we actually got
       console.log('🔍 EventsPage - Raw events from getPublicEvents:', eventsData.length);
