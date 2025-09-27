@@ -48,9 +48,19 @@ const EventsPage: React.FC = () => {
   };
 
   const getEventStatus = (event: EventData): 'active' | 'past' | 'completed' => {
-    // First check the database status
+    // DEBUG: Log the event status processing
+    console.log(`🔍 Processing event "${event.name}" with database status: "${event.status}"`);
+    
+    // First check the database status - respect it completely
     if (event.status === 'completed') {
+      console.log(`✅ Event "${event.name}" marked as completed in database`);
       return 'completed';
+    }
+    
+    // Non-active events should not appear here, but if they do, don't process them
+    if (event.status === 'non-active') {
+      console.warn(`⚠️ Non-active event "${event.name}" unexpectedly appeared in public events`);
+      return 'completed'; // Hide it by marking as completed
     }
     
     if (event.status === 'sold-out') {
@@ -60,25 +70,36 @@ const EventsPage: React.FC = () => {
       eventEndTime.setHours(eventEndTime.getHours() + 4); // Assume 4-hour events
       
       if (now > eventEndTime) {
+        console.log(`✅ Event "${event.name}" is past sold-out event, marking as completed`);
         return 'completed'; // Past sold-out event
       } else {
+        console.log(`✅ Event "${event.name}" is future sold-out event, marking as active`);
         return 'active'; // Future sold-out event
       }
     }
     
     // For 'active' status, determine based on date
-    const eventDate = new Date(event.date);
-    const now = new Date();
-    const eventEndTime = new Date(eventDate);
-    eventEndTime.setHours(eventEndTime.getHours() + 4); // Assume 4-hour events
-    
-    if (now < eventDate) {
-      return 'active'; // Future event
-    } else if (now > eventEndTime) {
-      return 'completed'; // Past event that's finished
-    } else {
-      return 'past'; // Event that's happening now or just finished
+    if (event.status === 'active') {
+      const eventDate = new Date(event.date);
+      const now = new Date();
+      const eventEndTime = new Date(eventDate);
+      eventEndTime.setHours(eventEndTime.getHours() + 4); // Assume 4-hour events
+      
+      if (now < eventDate) {
+        console.log(`✅ Event "${event.name}" is future active event`);
+        return 'active'; // Future event
+      } else if (now > eventEndTime) {
+        console.log(`✅ Event "${event.name}" is past active event, marking as completed`);
+        return 'completed'; // Past event that's finished
+      } else {
+        console.log(`✅ Event "${event.name}" is currently happening`);
+        return 'past'; // Event that's happening now or just finished
+      }
     }
+    
+    // Fallback for unknown statuses
+    console.warn(`⚠️ Unknown event status "${event.status}" for event "${event.name}"`);
+    return 'completed';
   };
 
   const filteredEvents = events.filter(event => {
