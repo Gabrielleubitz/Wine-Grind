@@ -25,9 +25,8 @@ const EventsPage: React.FC = () => {
       setError(null);
       // Use getPublicEvents to only get active, sold-out, and completed events
       const eventsData = await EventService.getPublicEvents();
-      // Filter out inactive events and sort by date (newest first)
-      const activeEvents = eventsData.filter(event => event.status !== 'inactive');
-      const sortedEvents = activeEvents.sort((a, b) => 
+      // Sort by date (newest first) - getPublicEvents already filters out non-active events
+      const sortedEvents = eventsData.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
       setEvents(sortedEvents);

@@ -47,9 +47,8 @@ const ConnectionsCard: React.FC = () => {
     try {
       setLoadingEvents(true);
       
-      // Get all events and filter out inactive ones
-      const allEventsRaw = await EventService.getPublicEvents();
-      const allEvents = allEventsRaw.filter(event => event.status !== 'inactive');
+      // Get all events - getPublicEvents already filters out non-active ones
+      const allEvents = await EventService.getPublicEvents();
       
       // Filter to only include events the user has registered for
       const userRegisteredEvents = [];

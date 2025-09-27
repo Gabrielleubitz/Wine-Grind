@@ -158,9 +158,8 @@ const EventsPage: React.FC = () => {
   const loadPublicEvents = async () => {
     try {
       const eventsData = await EventService.getPublicEvents();
-      // Filter out inactive events
-      const activeEvents = eventsData.filter(event => event.status !== 'inactive');
-      setEvents(activeEvents);
+      // getPublicEvents already filters out non-active events
+      setEvents(eventsData);
     } catch (error) {
       console.error('❌ Error loading events:', error);
     } finally {
