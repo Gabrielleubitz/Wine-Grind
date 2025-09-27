@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, User, RotateCcw, LogOut } from 'lucide-react';
+import { ArrowLeft, Shield, User, RotateCcw, LogOut, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import logoSvg from '../../assets/W&G Logo.svg';
 
@@ -58,14 +58,25 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => {
                     <span>Back to Admin</span>
                   </button>
                 ) : (
-                  <Link
-                    to="/events"
-                    onClick={switchToUserView}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>View User Dashboard</span>
-                  </Link>
+                  <div className="flex items-center space-x-2">
+                    <Link
+                      to="/dashboard"
+                      onClick={switchToUserView}
+                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>View User Dashboard</span>
+                    </Link>
+                    
+                    <Link
+                      to="/events"
+                      onClick={switchToUserView}
+                      className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-full hover:from-green-700 hover:to-green-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      <span>View Events</span>
+                    </Link>
+                  </div>
                 )}
               </div>
             )}
