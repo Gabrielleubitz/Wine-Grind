@@ -189,7 +189,7 @@ const SpeakerAwareHeader: React.FC = () => {
             {/* Mobile Menu Button */}
             <button 
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="md:hidden p-3 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors touch-manipulation"
               aria-label="Toggle mobile menu"
             >
               {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
@@ -200,14 +200,20 @@ const SpeakerAwareHeader: React.FC = () => {
           {showMobileMenu && (
             <div className="md:hidden py-4 border-t border-gray-200">
               <button 
-                onClick={() => navigate('/events')}
-                className="block w-full text-left px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => {
+                  navigate('/events');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-4 py-4 text-base text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation"
               >
                 Events
               </button>
               <button 
-                onClick={() => navigate('/login')}
-                className="block w-full text-left px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => {
+                  navigate('/login');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-4 py-4 text-base text-gray-600 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation"
               >
                 Login
               </button>
@@ -456,7 +462,7 @@ const SpeakerAwareHeader: React.FC = () => {
             <div className="mobile-menu-container">
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                className="md:hidden p-3 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors touch-manipulation"
                 aria-label="Toggle mobile menu"
               >
                 {showMobileMenu ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
@@ -471,7 +477,7 @@ const SpeakerAwareHeader: React.FC = () => {
             <div className="space-y-2">
               <button 
                 onClick={() => handleNavigation('/dashboard')}
-                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                className={`block w-full text-left px-4 py-4 text-base rounded-lg transition-colors touch-manipulation ${
                   location.pathname === '/dashboard'
                     ? 'text-red-600 bg-red-50'
                     : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
@@ -482,7 +488,7 @@ const SpeakerAwareHeader: React.FC = () => {
               
               <button 
                 onClick={() => handleNavigation('/events')}
-                className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                className={`block w-full text-left px-4 py-4 text-base rounded-lg transition-colors touch-manipulation ${
                   location.pathname === '/events'
                     ? 'text-red-600 bg-red-50'
                     : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
@@ -495,7 +501,7 @@ const SpeakerAwareHeader: React.FC = () => {
               {isSpeaker && (
                 <button 
                   onClick={() => handleNavigation('/speaker-dashboard')}
-                  className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 w-full px-4 py-4 text-base rounded-lg transition-colors touch-manipulation ${
                     location.pathname === '/speaker-dashboard'
                       ? 'text-orange-700 bg-orange-50'
                       : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
@@ -513,7 +519,7 @@ const SpeakerAwareHeader: React.FC = () => {
               {isAdmin && (
                 <button 
                   onClick={() => handleNavigation('/admin-tools')}
-                  className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 w-full px-4 py-4 text-base rounded-lg transition-colors touch-manipulation ${
                     location.pathname.startsWith('/admin')
                       ? 'text-purple-700 bg-purple-50'
                       : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
@@ -576,7 +582,7 @@ const SpeakerAwareHeader: React.FC = () => {
 
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2"
+                  className="flex items-center space-x-3 w-full px-4 py-4 text-base text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2 touch-manipulation"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
