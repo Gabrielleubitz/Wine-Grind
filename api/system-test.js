@@ -66,8 +66,8 @@ async function testEmail(params, res) {
     });
   }
 
-  const mailjetApiKey = process.env.MAILJET_API_KEY;
-  const mailjetSecretKey = process.env.MAILJET_SECRET_KEY;
+  const mailjetApiKey = process.env.MJ_APIKEY_PUBLIC;
+  const mailjetSecretKey = process.env.MJ_APIKEY_PRIVATE;
 
   if (!mailjetApiKey || !mailjetSecretKey) {
     console.error('❌ Missing Mailjet credentials');
