@@ -1,6 +1,8 @@
 {
   "type": "module",
   "dependencies": {
-    "node-mailjet": "^6.0.5"
+    "node-mailjet": "^6.0.5",
+    "twilio": "^4.19.0",
+    "openai": "^4.0.0"
   }
 }
