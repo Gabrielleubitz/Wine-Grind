@@ -85,13 +85,14 @@ const SystemTestPage: React.FC = () => {
     const startTime = performance.now();
     
     try {
-      // Call the Vercel API function to send a test email (Updated)
-      const response = await fetch('/api/test-email', {
+      // Call the consolidated system test API
+      const response = await fetch('/api/system-test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          testType: 'email',
           recipient: emailTest.recipient,
           subject: emailTest.subject,
           message: emailTest.message
@@ -235,12 +236,13 @@ const SystemTestPage: React.FC = () => {
     
     try {
       // Call the Vercel API function to test GPT (Updated)
-      const response = await fetch('/api/test-gpt', {
+      const response = await fetch('/api/system-test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          testType: 'gpt',
           prompt: gptTest.prompt
         })
       });
