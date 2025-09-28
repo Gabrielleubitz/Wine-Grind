@@ -132,8 +132,9 @@ export const useAuth = () => {
           console.error('❌ Failed to send signup confirmation email:', emailError);
         }
         
-        // Send admin SMS notification for pending approval
+        // Send admin notifications for pending approval (both SMS and email)
         try {
+          // Send SMS notification
           await fetch('/api/send-sms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -145,6 +146,23 @@ export const useAuth = () => {
           console.log('✅ Admin SMS notification sent for pending user');
         } catch (smsError) {
           console.error('❌ Failed to send admin SMS notification:', smsError);
+        }
+        
+        // Send email notification to admin
+        try {
+          await fetch('/api/send-admin-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: newUserData.name,
+              email: newUserData.email,
+              phone: newUserData.phone || 'Not provided',
+              work: `${newUserData.position || 'Not provided'} at ${newUserData.company || 'Not provided'}`
+            })
+          });
+          console.log('✅ Admin email notification sent for pending user');
+        } catch (emailError) {
+          console.error('❌ Failed to send admin email notification:', emailError);
         }
         
         return newUserData;
