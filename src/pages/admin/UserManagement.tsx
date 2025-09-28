@@ -13,7 +13,11 @@ import {
   Mic,
   Mail,
   Calendar,
-  Trash2
+  Trash2,
+  Phone,
+  Briefcase,
+  Linkedin,
+  Eye
 } from 'lucide-react';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -27,6 +31,12 @@ interface UserData {
   role: 'member' | 'admin' | 'speaker';
   createdAt?: any;
   profileImage?: string | null;
+  phone?: string;
+  company?: string;
+  work?: string;
+  linkedinUsername?: string;
+  position?: string;
+  status?: string;
 }
 
 interface ToastState {
@@ -51,6 +61,8 @@ const UserManagement: React.FC = () => {
   });
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     uid: string;
     name: string;
@@ -134,6 +146,24 @@ const UserManagement: React.FC = () => {
     } finally {
       setUpdatingUser(null);
     }
+  };
+
+  const handleUserProfileClick = (userData: UserData) => {
+    setSelectedUser(userData);
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setSelectedUser(null);
+    setShowProfileModal(false);
+  };
+
+  const formatPosition = (position: string) => {
+    if (!position) return '';
+    return position
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   const handleDeleteClick = (userData: UserData) => {
@@ -381,9 +411,10 @@ const UserManagement: React.FC = () => {
                   </tr>
                 ) : (
                   filteredUsers.map((userData) => (
-                    <tr key={userData.uid} className="hover:bg-gray-50">
+                    <tr key={userData.uid} className="group hover:bg-gray-50 cursor-pointer" onClick={() => handleUserProfileClick(userData)}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
+                          <Eye className="h-4 w-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
                             {userData.profileImage ? (
                               <img 
@@ -430,6 +461,7 @@ const UserManagement: React.FC = () => {
                             <select
                               value={userData.role}
                               onChange={(e) => handleRoleChange(userData.uid, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
                               disabled={updatingUser === userData.uid || userData.uid === user?.uid}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -454,7 +486,10 @@ const UserManagement: React.FC = () => {
                           
                           {/* Delete Button */}
                           <button
-                            onClick={() => handleDeleteClick(userData)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(userData);
+                            }}
                             disabled={userData.uid === user?.uid || deletingUser === userData.uid}
                             className="bg-red-100 text-red-700 p-2 rounded-lg hover:bg-red-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             title={userData.uid === user?.uid ? "You cannot delete your own account" : "Delete user"}
@@ -549,6 +584,167 @@ const UserManagement: React.FC = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showProfileModal && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0 h-16 w-16 rounded-full overflow-hidden">
+                  {selectedUser.profileImage ? (
+                    <img 
+                      src={selectedUser.profileImage} 
+                      alt={selectedUser.name || 'User'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzlDQTNBRiIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTQwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                      {selectedUser.name?.charAt(0) || selectedUser.email?.charAt(0) || '?'}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {selectedUser.name || 'No Name'}
+                  </h3>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(selectedUser.role)}`}>
+                      {getRoleIcon(selectedUser.role)}
+                      <span className="ml-1 capitalize">{selectedUser.role}</span>
+                    </span>
+                    {selectedUser.status && (
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedUser.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        selectedUser.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedUser.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseProfileModal}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Contact Information */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Email</div>
+                      <div className="font-medium text-gray-900">{selectedUser.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Phone</div>
+                      <div className="font-medium text-gray-900">{selectedUser.phone || 'Not provided'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional Information */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <Briefcase className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Company</div>
+                      <div className="font-medium text-gray-900">{selectedUser.company || 'Not provided'}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <UserIcon className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Position</div>
+                      <div className="font-medium text-gray-900">{formatPosition(selectedUser.position || '') || 'Not provided'}</div>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex items-start space-x-3">
+                    <Briefcase className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-500">Job Description</div>
+                      <div className="font-medium text-gray-900">{selectedUser.work || 'Not provided'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Links */}
+              {selectedUser.linkedinUsername && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Social Links</h4>
+                  <div className="flex items-center space-x-3">
+                    <Linkedin className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">LinkedIn</div>
+                      <a 
+                        href={`https://linkedin.com/in/${selectedUser.linkedinUsername.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//i, '').replace(/\/$/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-blue-600 hover:text-blue-700 underline"
+                      >
+                        linkedin.com/in/{selectedUser.linkedinUsername.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//i, '').replace(/\/$/, '')}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Account Details */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Account Details</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Member Since</div>
+                      <div className="font-medium text-gray-900">{formatDate(selectedUser.createdAt)}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <UserIcon className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">User ID</div>
+                      <div className="font-medium text-gray-900 font-mono text-sm">{selectedUser.uid}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end space-x-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={handleCloseProfileModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
