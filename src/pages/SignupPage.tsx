@@ -336,9 +336,12 @@ const SignupPage: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your full name"
                   disabled={isSubmitting}
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  autoComplete="name"
                 />
               </div>
             </div>
@@ -357,9 +360,12 @@ const SignupPage: React.FC = () => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
                   disabled={isSubmitting}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -397,7 +403,7 @@ const SignupPage: React.FC = () => {
                     required
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                     placeholder={selectedCountryCode === '+972' ? '0501234567' : 'Phone number'}
                     disabled={isSubmitting}
                   />
@@ -433,7 +439,7 @@ const SignupPage: React.FC = () => {
                   required
                   value={formData.company}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                   placeholder="e.g., TechCorp, Google, Self-Employed"
                   disabled={isSubmitting}
                 />
@@ -454,7 +460,7 @@ const SignupPage: React.FC = () => {
                   required
                   value={formData.work}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                   placeholder="e.g., Leading product development, Managing investments"
                   disabled={isSubmitting}
                 />
@@ -475,7 +481,7 @@ const SignupPage: React.FC = () => {
                   required
                   value={formData.linkedinUsername}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                   placeholder="e.g., johndoe (without linkedin.com/in/)"
                   disabled={isSubmitting}
                 />

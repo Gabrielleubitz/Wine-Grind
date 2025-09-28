@@ -167,7 +167,7 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 flex items-center justify-center px-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 flex items-center justify-center px-4 py-6 relative">
       {/* Logo in top left corner */}
       <div className="absolute top-6 left-6 z-10">
         <Link to="/" className="hover:opacity-80 transition-opacity duration-200">
@@ -191,7 +191,7 @@ const LoginPage: React.FC = () => {
           </Link>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
           {showForgotPassword ? (
             <>
               <div className="text-center mb-8">
@@ -235,9 +235,12 @@ const LoginPage: React.FC = () => {
                       required
                       value={forgotPasswordEmail}
                       onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                      className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your email"
                       disabled={isResettingPassword}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="email"
                     />
                   </div>
                 </div>
@@ -245,7 +248,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isResettingPassword || !forgotPasswordEmail.trim()}
-                  className="w-full bg-gradient-to-r from-red-700 to-blue-600 text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-red-700 to-blue-600 text-white py-4 px-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-base touch-manipulation"
                 >
                   {isResettingPassword ? (
                     <>
@@ -314,9 +317,11 @@ const LoginPage: React.FC = () => {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                      className="w-full pl-10 pr-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your email"
                       disabled={isSubmitting}
+                      autoCapitalize="none"
+                      autoCorrect="off"
                     />
                   </div>
                 </div>
@@ -335,15 +340,19 @@ const LoginPage: React.FC = () => {
                       required
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                      className="w-full pl-10 pr-12 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your password"
                       disabled={isSubmitting}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 p-1 touch-manipulation"
                       disabled={isSubmitting}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -353,7 +362,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isFormValid}
-                  className="w-full bg-gradient-to-r from-red-700 to-blue-600 text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-red-700 to-blue-600 text-white py-4 px-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-base touch-manipulation"
                 >
                   {isSubmitting ? (
                     <>
