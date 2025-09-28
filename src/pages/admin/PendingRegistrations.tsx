@@ -27,6 +27,7 @@ interface UserData {
   email: string;
   name: string;
   phone: string;
+  company: string;
   work: string;
   linkedinUsername: string;
   position: string;
@@ -442,7 +443,7 @@ const PendingRegistrations: React.FC = () => {
                               <Mail className="h-5 w-5 text-gray-400" />
                               <div>
                                 <div className="text-sm text-gray-500">Email</div>
-                                <div className="font-medium text-gray-900">{userData.email}</div>
+                                <div className="font-medium text-gray-900">{userData.email || 'Not provided'}</div>
                               </div>
                             </div>
                             
@@ -457,7 +458,15 @@ const PendingRegistrations: React.FC = () => {
                             <div className="flex items-center space-x-3">
                               <Briefcase className="h-5 w-5 text-gray-400" />
                               <div>
-                                <div className="text-sm text-gray-500">Work</div>
+                                <div className="text-sm text-gray-500">Company</div>
+                                <div className="font-medium text-gray-900">{userData.company || 'Not provided'}</div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-3">
+                              <User className="h-5 w-5 text-gray-400" />
+                              <div>
+                                <div className="text-sm text-gray-500">Job Description</div>
                                 <div className="font-medium text-gray-900">{userData.work || 'Not provided'}</div>
                               </div>
                             </div>

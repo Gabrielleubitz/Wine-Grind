@@ -105,6 +105,7 @@ export const useAuth = () => {
           ...baseData,
           name: profileData?.name || firebaseUser.displayName || '',
           phone: profileData?.phone || '',
+          company: profileData?.company || '',
           work: profileData?.work || '',
           linkedinUsername: profileData?.linkedinUsername || '',
           position: profileData?.position || '',
@@ -157,7 +158,7 @@ export const useAuth = () => {
               name: newUserData.name,
               email: newUserData.email,
               phone: newUserData.phone || 'Not provided',
-              work: `${newUserData.position || 'Not provided'} at ${newUserData.company || 'Not provided'}`
+              work: `${newUserData.work || 'Not provided'} at ${newUserData.company || 'Not provided'}`
             })
           });
           console.log('✅ Admin email notification sent for pending user');

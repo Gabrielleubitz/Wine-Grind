@@ -67,6 +67,7 @@ const SignupPage: React.FC = () => {
     name: '',
     email: '',
     phoneNumber: '',
+    company: '',
     work: '',
     linkedinUsername: '',
     position: '',
@@ -165,6 +166,11 @@ const SignupPage: React.FC = () => {
       return false;
     }
     
+    if (!formData.company.trim()) {
+      setValidationError('Please enter your company name');
+      return false;
+    }
+    
     if (!formData.work.trim()) {
       setValidationError('Please tell us about your work');
       return false;
@@ -213,6 +219,7 @@ const SignupPage: React.FC = () => {
       console.log('📝 Attempting registration for:', formData.email);
       await register(formData.email, formData.password, formData.name, {
         phone: formattedPhone,
+        company: formData.company,
         work: formData.work,
         linkedinUsername: formData.linkedinUsername,
         position: formData.position,
@@ -412,13 +419,34 @@ const SignupPage: React.FC = () => {
               )}
             </div>
 
-            {/* Work */}
+            {/* Company */}
             <div>
-              <label htmlFor="work" className="block text-sm font-medium text-gray-700 mb-2">
-                Work / What do you do? *
+              <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                Company *
               </label>
               <div className="relative">
                 <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  id="company"
+                  name="company"
+                  type="text"
+                  required
+                  value={formData.company}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  placeholder="e.g., TechCorp, Google, Self-Employed"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            {/* Work */}
+            <div>
+              <label htmlFor="work" className="block text-sm font-medium text-gray-700 mb-2">
+                Job Description *
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   id="work"
                   name="work"
@@ -427,7 +455,7 @@ const SignupPage: React.FC = () => {
                   value={formData.work}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                  placeholder="e.g., CEO at TechCorp, Software Engineer, Investor"
+                  placeholder="e.g., Leading product development, Managing investments"
                   disabled={isSubmitting}
                 />
               </div>
