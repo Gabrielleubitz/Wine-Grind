@@ -1,5 +1,5 @@
-// Cache name with version
-const CACHE_NAME = 'wine-grind-cache-v1';
+// Cache name with version - increment when you need to bust cache
+const CACHE_NAME = 'wine-grind-cache-v2';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -72,43 +72,56 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Cache-first strategy for static assets
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached response if found
-        if (response) {
-          return response;
-        }
-        
-        // Otherwise fetch from network
-        return fetch(event.request)
-          .then((networkResponse) => {
-            // Don't cache non-successful responses
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-            
-            // Clone the response as it can only be consumed once
+  // Network-first strategy for JS/CSS, cache-first for assets
+  const isStaticAsset = url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|woff2?)$/);
+  const isAppFile = url.pathname.match(/\.(js|css|html)$/);
+  
+  if (isStaticAsset) {
+    // Cache-first for images and fonts
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
-            
-            // Cache the new resource
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            
-            return networkResponse;
-          })
-          .catch(() => {
-            // If both cache and network fail, return a fallback for HTML requests
-            if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('/index.html');
-            }
-            return new Response('Network error occurred', { status: 408, headers: { 'Content-Type': 'text/plain' } });
-          });
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        });
       })
-  );
+    );
+  } else if (isAppFile) {
+    // Network-first for app files (JS/CSS/HTML) to get updates
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Fallback to cache if network fails
+        return caches.match(event.request).then((response) => {
+          if (response) {
+            return response;
+          }
+          // Final fallback for HTML requests
+          if (event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('/index.html');
+          }
+          return new Response('Network error occurred', { status: 408, headers: { 'Content-Type': 'text/plain' } });
+        });
+      })
+    );
+  } else {
+    // Default network-first for everything else
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+  }
 });
 
 // Handle push notifications

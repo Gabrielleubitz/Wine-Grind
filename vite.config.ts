@@ -17,6 +17,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Ensure proper hashing for cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'router': ['react-router-dom'],
